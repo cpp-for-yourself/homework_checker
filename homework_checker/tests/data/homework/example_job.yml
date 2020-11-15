@@ -1,0 +1,129 @@
+---
+folder: homework_checker/tests/data/homework
+homeworks:
+  - name: "Homework 1"
+    folder: "homework_1"
+    tasks:
+      - name: Task 1          # This is a struct for Task 1.
+        language: cpp         # Type of the Task.
+        folder: task_1        # Name of the folder containing the Task.
+        output_type: string   # We expect a string as an output.
+        binary_name: main
+        tests:                # An Task can have multiple tests.
+          - name: Test 1
+            expected_output: > # this wraps into a long string, no line breaks.
+              This is a long test output that we expect to be produced by the
+              code. We will compare the ouput to this EXACTLY.
+          - name: Test 2
+            input_args: Some string
+            expected_output: >
+              Some string output
+      - name: Task 2  # This one should not build, so no need for tests
+        language: cpp
+        folder: task_2
+        output_type: string
+      - name: Task 3
+        language: cpp
+        folder: task_3
+        output_type: number
+        binary_name: sum_numbers
+        tests:
+          - name: Test 1
+            input_args: 2 2
+            expected_output: 4
+          - name: Test 2  # This test should fail.
+            input_args: 2.15 5
+            expected_output: 7.15
+      - name: Task 4
+        language: cpp
+        folder: task_4
+        build_type: simple
+        output_type: number
+        tests:
+          - name: Test 1
+            input_args: 2 2
+            expected_output: 4
+          - name: Test 2  # This test should fail.
+            input_args: 2.15 5
+            expected_output: 7.15
+
+  - name: "Homework 2"
+    folder: "homework_2"
+    submit_by: "2018-04-18 00:00:00"
+    tasks:
+      - name: Task 1
+        language: cpp
+        folder: task_1
+        build_type: simple
+        output_type: number
+        tests:
+          - name: Test 1  # Should fail as the binary returns a string
+            expected_output: 4
+      - name: Task 2
+        language: bash
+        folder: task_2
+        binary_name: test_me
+        tests:
+          - name: Test 1
+            expected_output: |  # This maintains whitespaces.
+              Hello World!
+              Another line
+              test_me.sh
+      - name: Task 3
+        language: cpp
+        folder: task_3
+        build_type: simple
+        tests:
+          - name: Test 1  # Should fail because of the timeout.
+            expected_output: "irrelevant"
+      - name: Task 4  # Non existing Task
+        language: cpp
+        folder: task_4
+        build_type: simple
+        output_type: number
+        tests:
+          - name: Test 1
+            expected_output: 4
+
+  - name: "Homework 3"
+    folder: "homework_3"
+    tasks:
+      - name: Google Tests
+        language: cpp
+        folder: cpptests
+        tests:
+          - name: Just build
+            run_google_tests: True
+          - name: Inject pass
+            run_google_tests: True
+            inject_folders:
+              - solutions/pass/tests
+          - name: Inject fail
+            run_google_tests: True
+            inject_folders:
+              - solutions/fail/tests
+      - name: Bash with many folders
+        language: bash
+        folder: bashtests
+        binary_name: ls_me
+        pipe_through: "| head -n 2"
+        tests:
+          - name: ls
+            inject_folders: # Just multiple folders.
+              - solutions/fail
+              - solutions/pass
+            expected_output: |  # This maintains whitespaces.
+              fail
+              ls_me.sh
+
+  - name: "Homework 4"  # Non existing homework
+    folder: "homework_4"
+    tasks:
+      - name: Irrelevant
+        language: cpp
+        folder: task_1
+        build_type: simple
+        output_type: number
+        tests:
+          - name: Irrelevant
+            expected_output: 4
