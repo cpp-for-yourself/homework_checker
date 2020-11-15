@@ -1,6 +1,6 @@
 """Homework checker module."""
 
-name = "ipb_homework_checker"
+name = "homework_checker"
 
 __all__ = ("check_homework",
            "checker",

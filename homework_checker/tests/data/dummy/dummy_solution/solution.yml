@@ -1,6 +1,6 @@
 ---
 # Target folder with code to be tested.
-folder: ipb_homework_checker/tests/data/dummy/dummy_homework
+folder: homework_checker/tests/data/dummy/dummy_homework
 homeworks:
   - name: Homework 1
     folder: hw_1

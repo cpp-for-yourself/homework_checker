@@ -17,19 +17,20 @@ Expected output: '{expected}'"""
 BUILD_SUCCESS_TAG = "0. Build succeeded"
 STYLE_ERROR_TAG = "0. Style errors"
 
+TOTAL_ERRORS_FOUND_TAG = "Total errors found"
+
 
 class Task:
     """Define an abstract Task."""
-    BACKUP_FOLDER = '.backup'
+
+    BACKUP_FOLDER = ".backup"
 
     @staticmethod
     def from_yaml_node(task_node, student_hw_folder, job_file):
         """Create an Task appropriate for the language."""
-        student_task_folder = path.join(
-            student_hw_folder, task_node[Tags.FOLDER_TAG])
+        student_task_folder = path.join(student_hw_folder, task_node[Tags.FOLDER_TAG])
         if not path.exists(student_task_folder):
-            log.warning("Folder '%s' does not exist. Skipping.",
-                        student_task_folder)
+            log.warning("Folder '%s' does not exist. Skipping.", student_task_folder)
             return None
         language_tag = task_node[Tags.LANGUAGE_TAG]
         if language_tag == LangTags.CPP:
@@ -49,8 +50,7 @@ class Task:
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
         self._pipe_through = task_node[Tags.PIPE_TAG]
-        self._backup_folder = path.join(
-            student_task_folder, Task.BACKUP_FOLDER)
+        self._backup_folder = path.join(student_task_folder, Task.BACKUP_FOLDER)
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
         else:
@@ -97,6 +97,7 @@ class Task:
             for folder in injected_folders:
                 self._revert_injections(folder)
             from os import rmdir
+
             rmdir(self._backup_folder)
 
     def _inject_folder(self, dest_folder, inject_folder):
@@ -106,8 +107,10 @@ class Task:
         full_path_to = path.join(self._student_task_folder, dest_folder)
         if not path.isdir(self._backup_folder):
             from os import mkdir
+
             mkdir(self._backup_folder)
         from shutil import copytree, move
+
         if path.exists(full_path_to):
             # Move the existing data to the backup folder if needed.
             move(full_path_to, self._backup_folder)
@@ -118,15 +121,17 @@ class Task:
         backed_up_folder = path.join(self._backup_folder, dest_folder)
         if path.isdir(injected_folder):
             from shutil import rmtree
+
             rmtree(injected_folder)
         if not path.isdir(backed_up_folder):
             # There is no backup, so nothing to restore.
             return
         from shutil import move
+
         move(backed_up_folder, self._student_task_folder)
 
     def _run_test(self, test_node):
-        raise NotImplementedError('This method is not implemented.')
+        raise NotImplementedError("This method is not implemented.")
 
     def _build_if_needed(self):
         return None
@@ -137,11 +142,10 @@ class Task:
 
 class CppTask(Task):
     """Define a C++ Task."""
+
     CMAKE_BUILD_CMD = "cmake .. && make -j2"
-    REMAKE_AND_TEST = \
-        "make clean && rm -r * && cmake .. && make -j2 && ctest -VV"
-    BUILD_CMD_SIMPLE = \
-        "clang++ -std=c++14 -o {binary} {compiler_flags} {binary}.cpp"
+    REMAKE_AND_TEST = "make clean && rm -r * && cmake .. && make -j2 && ctest -VV"
+    BUILD_CMD_SIMPLE = "clang++ -std=c++14 -o {binary} {compiler_flags} {binary}.cpp"
 
     def __init__(self, task_node, root_folder, job_file):
         """Initialize the C++ Task."""
@@ -150,62 +154,68 @@ class CppTask(Task):
         self._build_type = task_node[Tags.BUILD_TYPE_TAG]
         if self._build_type == BuildTags.CMAKE:
             # The cmake project will always work from build folder.
-            self._cwd = path.join(self._cwd, 'build')
+            self._cwd = path.join(self._cwd, "build")
             tools.create_folder_if_needed(self._cwd)
 
     def _build_if_needed(self):
         if self._build_type == BuildTags.CMAKE:
-            return tools.run_command(CppTask.CMAKE_BUILD_CMD,
-                                     cwd=self._cwd,
-                                     timeout=60)
+            return tools.run_command(CppTask.CMAKE_BUILD_CMD, cwd=self._cwd, timeout=60)
         return tools.run_command(
             CppTask.BUILD_CMD_SIMPLE.format(
-                binary=self._binary_name,
-                compiler_flags=self._compiler_flags),
-            cwd=self._cwd)
+                binary=self._binary_name, compiler_flags=self._compiler_flags
+            ),
+            cwd=self._cwd,
+        )
 
     def _code_style_errors(self):
         """Check if code conforms to Google Style."""
-        command = 'cpplint --counting=detailed ' +\
-            '--filter=-legal,-readability/todo,' +\
-            '-build/include_order,-runtime/threadsafe_fn,' +\
-            '-runtime/arrays' +\
-            ' $( find . -name "*.h" -o -name "*.cpp" | grep -vE "^./build/" )'
+        command = (
+            "cpplint --counting=detailed "
+            + "--filter=-legal,-readability/todo,"
+            + "-build/include_order,-runtime/threadsafe_fn,"
+            + "-runtime/arrays"
+            + ' $( find . -name "*.h" -o -name "*.cpp" | grep -vE "^./build/" )'
+        )
         result = tools.run_command(command, cwd=self._student_task_folder)
-        if result.stderr and "Total errors found" in result.stderr:
+        if result.stderr and (
+            TOTAL_ERRORS_FOUND_TAG in result.stderr
+            or TOTAL_ERRORS_FOUND_TAG in result.stdout
+        ):
             return result
         return None
 
     def _run_test(self, test_node):
         if test_node[Tags.RUN_GTESTS_TAG]:
-            return tools.run_command(
-                CppTask.REMAKE_AND_TEST, cwd=self._cwd, timeout=60)
-        input_str = ''
+            return tools.run_command(CppTask.REMAKE_AND_TEST, cwd=self._cwd, timeout=60)
+        input_str = ""
         if Tags.INPUT_TAG in test_node:
             input_str = test_node[Tags.INPUT_TAG]
         run_cmd = "./{binary_name} {args}".format(
-            binary_name=self._binary_name, args=input_str)
+            binary_name=self._binary_name, args=input_str
+        )
         if self._pipe_through:
-            run_cmd += ' ' + self._pipe_through
+            run_cmd += " " + self._pipe_through
         run_result = tools.run_command(run_cmd, cwd=self._cwd)
         if not run_result.succeeded():
             return run_result
-        our_output, error = tools.convert_to(
-            self._output_type, run_result.stdout)
+        our_output, error = tools.convert_to(self._output_type, run_result.stdout)
         if not our_output:
             # Conversion has failed.
             run_result.stderr = error
             return run_result
         expected_output, error = tools.convert_to(
-            self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG])
+            self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG]
+        )
         if our_output != expected_output:
             run_result.stderr = OUTPUT_MISMATCH_MESSAGE.format(
-                actual=our_output, input=input_str, expected=expected_output)
+                actual=our_output, input=input_str, expected=expected_output
+            )
         return run_result
 
 
 class BashTask(Task):
     """Define a Bash Task."""
+
     RUN_CMD = "sh {binary_name}.sh {args}"
 
     def __init__(self, task_node, root_folder, job_file):
@@ -216,25 +226,25 @@ class BashTask(Task):
         pass  # There is nothing to build in Bash.
 
     def _run_test(self, test_node):
-        input_str = ''
+        input_str = ""
         if Tags.INPUT_TAG in test_node:
             input_str = test_node[Tags.INPUT_TAG]
-        run_cmd = BashTask.RUN_CMD.format(
-            binary_name=self._binary_name, args=input_str)
+        run_cmd = BashTask.RUN_CMD.format(binary_name=self._binary_name, args=input_str)
         if self._pipe_through:
-            run_cmd += ' ' + self._pipe_through
+            run_cmd += " " + self._pipe_through
         run_result = tools.run_command(run_cmd, cwd=self._cwd)
         if not run_result.succeeded():
             return run_result
-        our_output, error = tools.convert_to(
-            self._output_type, run_result.stdout)
+        our_output, error = tools.convert_to(self._output_type, run_result.stdout)
         if not our_output:
             # Conversion has failed.
             run_result.stderr = error
             return run_result
         expected_output, error = tools.convert_to(
-            self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG])
+            self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG]
+        )
         if our_output != expected_output:
             run_result.stderr = OUTPUT_MISMATCH_MESSAGE.format(
-                actual=our_output, input=input_str, expected=expected_output)
+                actual=our_output, input=input_str, expected=expected_output
+            )
         return run_result

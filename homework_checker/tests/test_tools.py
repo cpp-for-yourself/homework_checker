@@ -4,8 +4,8 @@
 import unittest
 from os import path
 
-from ipb_homework_checker import tools
-from ipb_homework_checker.schema_tags import OutputTags
+from homework_checker import tools
+from homework_checker.schema_tags import OutputTags
 
 
 class TestTools(unittest.TestCase):
@@ -13,10 +13,11 @@ class TestTools(unittest.TestCase):
 
     def test_pkg_name(self):
         """Pkg name test."""
-        self.assertEqual(tools.PKG_NAME, 'ipb_homework_checker')
+        self.assertEqual(tools.PKG_NAME, "homework_checker")
         if path.basename(tools.PROJECT_ROOT_FOLDER):
-            self.assertEqual(path.basename(tools.PROJECT_ROOT_FOLDER),
-                             'ipb_homework_checker')
+            self.assertEqual(
+                path.basename(tools.PROJECT_ROOT_FOLDER), "homework_checker"
+            )
 
     def test_convert_to(self):
         """Test conversion to expected type."""
@@ -39,28 +40,32 @@ class TestTools(unittest.TestCase):
     def test_sleep_timeout(self):
         """Test that we can break an endless loop."""
         from time import monotonic as timer
+
         start = timer()
         cmd_result = tools.run_command("sleep 10", timeout=1)
         self.assertFalse(cmd_result.succeeded())
         self.assertLess(timer() - start, 5)
         self.assertEqual(
-            cmd_result.stderr,
-            "Timeout: command 'sleep 10' ran longer than 1 seconds")
+            cmd_result.stderr, "Timeout: command 'sleep 10' ran longer than 1 seconds"
+        )
 
     def test_git_url(self):
         """Test that we can break an endless loop."""
         domain, user, project = tools.parse_git_url(
-            "https://gitlab.ipb.uni-bonn.de/igor/some_project.git")
+            "https://gitlab.ipb.uni-bonn.de/igor/some_project.git"
+        )
         self.assertEqual(domain, "gitlab.ipb.uni-bonn.de")
         self.assertEqual(user, "igor")
         self.assertEqual(project, "some_project")
         domain, user, project = tools.parse_git_url(
-            "git@gitlab.ipb.uni-bonn.de:igor/some_project.git")
+            "git@gitlab.ipb.uni-bonn.de:igor/some_project.git"
+        )
         self.assertEqual(domain, "gitlab.ipb.uni-bonn.de")
         self.assertEqual(user, "igor")
         self.assertEqual(project, "some_project")
         domain, user, project = tools.parse_git_url(
-            "git@github.com:PRBonn/depth_clustering.git")
+            "git@github.com:PRBonn/depth_clustering.git"
+        )
         self.assertEqual(domain, "github.com")
         self.assertEqual(user, "PRBonn")
         self.assertEqual(project, "depth_clustering")
@@ -68,8 +73,9 @@ class TestTools(unittest.TestCase):
     def test_endless_loop_timeout(self):
         """Test that we can break an endless loop."""
         from time import monotonic as timer
-        path_to_data = path.join(path.dirname(__file__), 'data')
-        path_to_file = path.join(path_to_data, 'endless.cpp')
+
+        path_to_data = path.join(path.dirname(__file__), "data")
+        path_to_file = path.join(path_to_data, "endless.cpp")
         cmd_build = "c++ -o endless -O0 " + path_to_file
         cmd_result = tools.run_command(cmd_build)
         print(cmd_result.stderr)
@@ -79,5 +85,5 @@ class TestTools(unittest.TestCase):
         self.assertFalse(cmd_result.succeeded())
         self.assertLess(timer() - start, 5)
         self.assertEqual(
-            cmd_result.stderr,
-            "Timeout: command './endless' ran longer than 2 seconds")
+            cmd_result.stderr, "Timeout: command './endless' ran longer than 2 seconds"
+        )

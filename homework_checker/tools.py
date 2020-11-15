@@ -9,7 +9,7 @@ import datetime
 
 from .schema_tags import OutputTags
 
-PKG_NAME = "ipb_homework_checker"
+PKG_NAME = "homework_checker"
 PROJECT_ROOT_FOLDER = path.abspath(path.dirname(path.dirname(__file__)))
 DATE_PATTERN = "%Y-%m-%d %H:%M:%S"
 MAX_DATE_STR = datetime.datetime.max.strftime(DATE_PATTERN)
@@ -57,7 +57,7 @@ def convert_to(output_type, value):
         if output_type == OutputTags.NUMBER:
             result = float(value)
     except ValueError as e:
-        log.error('Exception: %s.', e)
+        log.error("Exception: %s.", e)
         return None, str(e)
     return result, "OK"
 
@@ -72,19 +72,23 @@ def parse_git_url(git_url):
         (str, str, str): tupple of domain, user and project name parsed from url
     """
     import re
-    regex = re.compile(r'(?:git@|https:\/\/)'  # Prefix
-                       r'([\w\-_\.]+)'         # Domain
-                       r'[:\/]'                # Separator : or /
-                       r'([\w\-_\.\/]+)'       # User or folders
-                       r'[\/]'                 # Separator /
-                       r'([\w\-_]+)'           # Project name
-                       r'(?:.git)*$')          # .git or nothing
+
+    regex = re.compile(
+        r"(?:git@|https:\/\/)"  # Prefix
+        r"([\w\-_\.]+)"  # Domain
+        r"[:\/]"  # Separator : or /
+        r"([\w\-_\.\/]+)"  # User or folders
+        r"[\/]"  # Separator /
+        r"([\w\-_]+)"  # Project name
+        r"(?:.git)*$"
+    )  # .git or nothing
     domain, user, project = regex.search(git_url).groups()
     return domain, user, project
 
 
 class CmdResult:
     """A small container for command result."""
+
     SUCCESS = 0
     FAILURE = 13
 
@@ -133,8 +137,7 @@ class CmdResult:
         if not stdout:
             stdout = ""
         if self.stderr:
-            return "stdout: {}, stderr: {}".format(stdout.strip(),
-                                                   self.stderr.strip())
+            return "stdout: {}, stderr: {}".format(stdout.strip(), self.stderr.strip())
         return stdout.strip()
 
 
@@ -151,17 +154,21 @@ def run_command(command, shell=True, cwd=path.curdir, env=environ, timeout=20):
         if shell and isinstance(command, list):
             command = subprocess.list2cmdline(command)
             log.debug("running command: \n%s", command)
-        process = __run_subprocess(command,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   shell=shell,
-                                   cwd=cwd,
-                                   env=env,
-                                   startupinfo=startupinfo,
-                                   timeout=timeout)
-        return CmdResult(returncode=process.returncode,
-                         stdout=process.stdout.decode('utf-8'),
-                         stderr=process.stderr.decode('utf-8'))
+        process = __run_subprocess(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=shell,
+            cwd=cwd,
+            env=env,
+            startupinfo=startupinfo,
+            timeout=timeout,
+        )
+        return CmdResult(
+            returncode=process.returncode,
+            stdout=process.stdout.decode("utf-8"),
+            stderr=process.stderr.decode("utf-8"),
+        )
     except subprocess.CalledProcessError as e:
         output_text = e.output.decode("utf-8")
         log.error("command '%s' finished with code: %s", e.cmd, e.returncode)
@@ -169,16 +176,13 @@ def run_command(command, shell=True, cwd=path.curdir, env=environ, timeout=20):
         return CmdResult(returncode=e.returncode, stderr=output_text)
     except subprocess.TimeoutExpired as e:
         output_text = "Timeout: command '{}' ran longer than {} seconds".format(
-            e.cmd.strip(), e.timeout)
+            e.cmd.strip(), e.timeout
+        )
         log.error(output_text)
         return CmdResult(returncode=1, stderr=output_text)
 
 
-def __run_subprocess(command,
-                     input=None,
-                     timeout=None,
-                     check=False,
-                     **kwargs):
+def __run_subprocess(command, input=None, timeout=None, check=False, **kwargs):
     """Run a command as a subprocess.
 
     Using the guide from StackOverflow:
@@ -192,13 +196,14 @@ def __run_subprocess(command,
     convenience of piping arguments from one function to another.
     """
     if input is not None:
-        if 'stdin' in kwargs:
-            raise ValueError('stdin and input arguments may not both be used.')
-        kwargs['stdin'] = subprocess.PIPE
+        if "stdin" in kwargs:
+            raise ValueError("stdin and input arguments may not both be used.")
+        kwargs["stdin"] = subprocess.PIPE
     import os
     import signal
     from subprocess import Popen, TimeoutExpired, CalledProcessError
     from subprocess import CompletedProcess
+
     with Popen(command, preexec_fn=os.setsid, **kwargs) as process:
         try:
             stdout, stderr = process.communicate(input, timeout=timeout)
@@ -206,10 +211,10 @@ def __run_subprocess(command,
             # Kill the whole group of processes.
             os.killpg(process.pid, signal.SIGINT)
             stdout, stderr = process.communicate()
-            raise TimeoutExpired(process.args, timeout, output=stdout,
-                                 stderr=stderr)
+            raise TimeoutExpired(process.args, timeout, output=stdout, stderr=stderr)
         retcode = process.poll()
         if check and retcode:
-            raise CalledProcessError(retcode, process.args,
-                                     output=stdout, stderr=stderr)
+            raise CalledProcessError(
+                retcode, process.args, output=stdout, stderr=stderr
+            )
     return CompletedProcess(process.args, retcode, stdout, stderr)

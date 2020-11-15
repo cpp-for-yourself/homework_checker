@@ -12,8 +12,7 @@ from .schema_tags import Tags, OutputTags, BuildTags, LangTags
 
 log = logging.getLogger("GHC")
 
-SCHEMA_FILE = path.join(path.dirname(
-    path.dirname(__file__)), "schema", "schema.yml")
+SCHEMA_FILE = path.join(path.dirname(path.dirname(__file__)), "schema", "schema.yml")
 
 
 class SchemaManager:
@@ -21,42 +20,53 @@ class SchemaManager:
 
     def __init__(self, file_name):
         """Create a schema for my tests."""
-        self.__schema = Schema({
-            Tags.FOLDER_TAG: str,
-            Tags.HOMEWORKS_TAG: [{
-                Tags.NAME_TAG: str,
+        self.__schema = Schema(
+            {
                 Tags.FOLDER_TAG: str,
-                Optional(Tags.DEADLINE_TAG,
-                         default=MAX_DATE_STR): str,
-                Tags.TASKS_TAG: [{
-                    Tags.NAME_TAG: str,
-                    Tags.LANGUAGE_TAG: Or(LangTags.CPP, LangTags.BASH),
-                    Tags.FOLDER_TAG: str,
-                    Optional(Tags.OUTPUT_TYPE_TAG,
-                             default=OutputTags.STRING): Or(OutputTags.STRING,
-                                                            OutputTags.NUMBER),
-                    Optional(Tags.COMPILER_FLAGS_TAG, default="-Wall"): str,
-                    Optional(Tags.BINARY_NAME_TAG, default="main"): str,
-                    Optional(Tags.PIPE_TAG, default=""): str,
-                    Optional(Tags.BUILD_TYPE_TAG,
-                             default=BuildTags.CMAKE): Or(BuildTags.CMAKE,
-                                                          BuildTags.SIMPLE),
-                    Optional(Tags.INJECT_FOLDER_TAG): [str],
-                    Optional(Tags.TESTS_TAG): [{
+                Tags.HOMEWORKS_TAG: [
+                    {
                         Tags.NAME_TAG: str,
-                        Optional(Tags.INPUT_TAG): str,
-                        Optional(Tags.INJECT_FOLDER_TAG): [str],
-                        Optional(Tags.RUN_GTESTS_TAG, default=False): bool,
-                        Optional(Tags.EXPECTED_OUTPUT_TAG): Or(str, float, int)
-                    }]
-                }]
-            }]
-        })
+                        Tags.FOLDER_TAG: str,
+                        Optional(Tags.DEADLINE_TAG, default=MAX_DATE_STR): str,
+                        Tags.TASKS_TAG: [
+                            {
+                                Tags.NAME_TAG: str,
+                                Tags.LANGUAGE_TAG: Or(LangTags.CPP, LangTags.BASH),
+                                Tags.FOLDER_TAG: str,
+                                Optional(
+                                    Tags.OUTPUT_TYPE_TAG, default=OutputTags.STRING
+                                ): Or(OutputTags.STRING, OutputTags.NUMBER),
+                                Optional(Tags.COMPILER_FLAGS_TAG, default="-Wall"): str,
+                                Optional(Tags.BINARY_NAME_TAG, default="main"): str,
+                                Optional(Tags.PIPE_TAG, default=""): str,
+                                Optional(
+                                    Tags.BUILD_TYPE_TAG, default=BuildTags.CMAKE
+                                ): Or(BuildTags.CMAKE, BuildTags.SIMPLE),
+                                Optional(Tags.INJECT_FOLDER_TAG): [str],
+                                Optional(Tags.TESTS_TAG): [
+                                    {
+                                        Tags.NAME_TAG: str,
+                                        Optional(Tags.INPUT_TAG): str,
+                                        Optional(Tags.INJECT_FOLDER_TAG): [str],
+                                        Optional(
+                                            Tags.RUN_GTESTS_TAG, default=False
+                                        ): bool,
+                                        Optional(Tags.EXPECTED_OUTPUT_TAG): Or(
+                                            str, float, int
+                                        ),
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+        )
         yaml = YAML()
         yaml.width = 4096  # big enough value to prevent wrapping
         yaml.explicit_start = True
         yaml.indent(mapping=2, sequence=4, offset=2)
-        with open(file_name, 'r') as stream:
+        with open(file_name, "r") as stream:
             contents = SchemaManager.__to_simple_dict(yaml.load(stream))
             try:
                 self.__validated_yaml = self.__schema.validate(contents)
@@ -67,13 +77,11 @@ class SchemaManager:
         # have the permission. This is intended to keep the schema file up to
         # date when we add new stuff to it.
         try:
-            with open(SCHEMA_FILE, 'w') as outfile:
-                str_dict = SchemaManager.__sanitize_value(
-                    self.__schema._schema)
+            with open(SCHEMA_FILE, "w") as outfile:
+                str_dict = SchemaManager.__sanitize_value(self.__schema._schema)
                 yaml.dump(str_dict, outfile)
         except OSError:
-            log.debug(
-                "Cannot write schema file. We only use this while developing.")
+            log.debug("Cannot write schema file. We only use this while developing.")
 
     def __to_simple_list(commented_seq):
         simple_list = []
@@ -113,10 +121,10 @@ class SchemaManager:
         if isinstance(input_var, dict):
             new_dict = {}
             for key, val in input_var.items():
-                new_dict[SchemaManager.__sanitize_value(key)] \
-                    = SchemaManager.__sanitize_value(val)
-            return CommentedMap(
-                sorted(new_dict.items(), key=operator.itemgetter(0)))
+                new_dict[
+                    SchemaManager.__sanitize_value(key)
+                ] = SchemaManager.__sanitize_value(val)
+            return CommentedMap(sorted(new_dict.items(), key=operator.itemgetter(0)))
         if isinstance(input_var, list):
             new_list = []
             for val in input_var:
@@ -125,17 +133,17 @@ class SchemaManager:
         if isinstance(input_var, Optional):
             if input_var._schema == Tags.DEADLINE_TAG:
                 return SchemaManager.__sanitize_value(input_var._schema)
-            return '~[optional]~ ' \
-                + SchemaManager.__sanitize_value(input_var._schema)
+            return "~[optional]~ " + SchemaManager.__sanitize_value(input_var._schema)
         if isinstance(input_var, Or):
-            return 'Any of ' + str(
-                [SchemaManager.__sanitize_value(s) for s in input_var._args])
+            return "Any of " + str(
+                [SchemaManager.__sanitize_value(s) for s in input_var._args]
+            )
         if input_var is str:
-            return 'String value'
+            return "String value"
         if input_var is float:
-            return 'Float value'
+            return "Float value"
         if input_var is int:
-            return 'Int value'
+            return "Int value"
         if input_var is bool:
-            return 'Boolean value'
+            return "Boolean value"
         return str(input_var)

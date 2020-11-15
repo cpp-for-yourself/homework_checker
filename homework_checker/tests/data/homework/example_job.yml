@@ -1,5 +1,5 @@
 ---
-folder: ipb_homework_checker/tests/data/homework
+folder: homework_checker/tests/data/homework
 homeworks:
   - name: "Homework 1"
     folder: "homework_1"

@@ -3,42 +3,46 @@
 
 class Tags:
     """List of tags available."""
-    BINARY_NAME_TAG = 'binary_name'
-    BUILD_TYPE_TAG = 'build_type'
-    COMPILER_FLAGS_TAG = 'compiler_flags'
-    DEADLINE_TAG = 'submit_by'
-    EXPECTED_OUTPUT_TAG = 'expected_output'
-    FOLDER_TAG = 'folder'
-    HOMEWORKS_TAG = 'homeworks'
-    INJECT_FOLDER_TAG = 'inject_folders'
-    INPUT_TAG = 'input_args'
-    LANGUAGE_TAG = 'language'
-    NAME_TAG = 'name'
-    OUTPUT_TYPE_TAG = 'output_type'
-    PIPE_TAG = 'pipe_through'
-    RUN_GTESTS_TAG = 'run_google_tests'
-    TASKS_TAG = 'tasks'
-    TESTS_TAG = 'tests'
+
+    BINARY_NAME_TAG = "binary_name"
+    BUILD_TYPE_TAG = "build_type"
+    COMPILER_FLAGS_TAG = "compiler_flags"
+    DEADLINE_TAG = "submit_by"
+    EXPECTED_OUTPUT_TAG = "expected_output"
+    FOLDER_TAG = "folder"
+    HOMEWORKS_TAG = "homeworks"
+    INJECT_FOLDER_TAG = "inject_folders"
+    INPUT_TAG = "input_args"
+    LANGUAGE_TAG = "language"
+    NAME_TAG = "name"
+    OUTPUT_TYPE_TAG = "output_type"
+    PIPE_TAG = "pipe_through"
+    RUN_GTESTS_TAG = "run_google_tests"
+    TASKS_TAG = "tasks"
+    TESTS_TAG = "tests"
 
 
 class OutputTags:
     """Define tags for output types."""
-    STRING = 'string'
-    NUMBER = 'number'
+
+    STRING = "string"
+    NUMBER = "number"
     ALL = [STRING, NUMBER]
 
 
 class BuildTags:
     """Define tags for build types."""
-    CMAKE = 'cmake'
-    SIMPLE = 'simple'
+
+    CMAKE = "cmake"
+    SIMPLE = "simple"
     ALL = [CMAKE, SIMPLE]
 
 
 class LangTags:
     """Define tags for build types."""
-    CPP = 'cpp'
-    BASH = 'bash'
+
+    CPP = "cpp"
+    BASH = "bash"
     ALL = [CPP, BASH]
 
 

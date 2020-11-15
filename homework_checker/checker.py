@@ -16,7 +16,8 @@ log = logging.getLogger("GHC")
 
 class Checker:
     """Check homework."""
-    TESTS_TAG = 'tests'
+
+    TESTS_TAG = "tests"
 
     def __init__(self, job_file_path):
         """Initialize the checker from file."""
@@ -24,7 +25,8 @@ class Checker:
         schema_manager = SchemaManager(self._job_file_path)
         self._base_node = schema_manager.validated_yaml
         self._checked_code_folder = tools.expand_if_needed(
-            self._base_node[Tags.FOLDER_TAG])
+            self._base_node[Tags.FOLDER_TAG]
+        )
         # The results of all tests will be kept here.
         self._results = {}
 
@@ -33,22 +35,23 @@ class Checker:
         results = {}
         for homework_node in self._base_node[Tags.HOMEWORKS_TAG]:
             current_folder = path.join(
-                self._checked_code_folder, homework_node[Tags.FOLDER_TAG])
+                self._checked_code_folder, homework_node[Tags.FOLDER_TAG]
+            )
             if not path.exists(current_folder):
-                log.warning("Folder '%s' does not exist. Skiping.",
-                            current_folder)
+                log.warning("Folder '%s' does not exist. Skiping.", current_folder)
                 continue
             hw_name = homework_node[Tags.NAME_TAG]
             results[hw_name] = {}
             deadline_str = homework_node[Tags.DEADLINE_TAG]
-            deadline_datetime = datetime.strptime(deadline_str,
-                                                  tools.DATE_PATTERN)
+            deadline_datetime = datetime.strptime(deadline_str, tools.DATE_PATTERN)
             if datetime.now() > deadline_datetime:
                 results[hw_name][tools.EXPIRED_TAG] = True
             for task_node in homework_node[Tags.TASKS_TAG]:
-                task = Task.from_yaml_node(task_node=task_node,
-                                           student_hw_folder=current_folder,
-                                           job_file=self._job_file_path)
+                task = Task.from_yaml_node(
+                    task_node=task_node,
+                    student_hw_folder=current_folder,
+                    job_file=self._job_file_path,
+                )
                 if not task:
                     continue
                 results[hw_name][task.name] = task.check_all_tests()
