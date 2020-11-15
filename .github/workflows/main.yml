@@ -22,7 +22,7 @@ jobs:
         pipenv install
     - name: Lint with Black linter
       run: >
-        pipenv run black homework_checker
+        pipenv run black homework_checker --check --diff
     - name: Run unit tests
       run: >
         pipenv run python3 -m unittest discover -v homework_checker/tests/
