@@ -11,7 +11,7 @@ jobs:
 
     - name: Install prerequisites
       run: >
-        sudo apt install -y clang++ cmake libgtest-dev
+        sudo apt install -y libgtest-dev
 
     - name: Initialize workspace
       run: >
