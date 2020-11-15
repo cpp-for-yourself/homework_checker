@@ -1,5 +1,5 @@
-add_subdirectory(/usr/src/gtest
-                 ${PROJECT_BINARY_DIR}/gtest)
+add_subdirectory(/usr/src/googletest
+                 ${PROJECT_BINARY_DIR}/googletest)
 include(CTest) # Include testing cmake package.
 
 add_executable(my_tests test_dummy.cpp)

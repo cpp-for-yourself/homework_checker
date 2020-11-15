@@ -50,6 +50,7 @@ class TestChecker(unittest.TestCase):
             "Timeout: command './main' ran longer than 20 seconds",
         )
 
+        print(results)
         self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Just build"])
         self.assertTrue(results["Homework 3"]["Google Tests"]["Just build"].succeeded())
         self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Inject pass"])
