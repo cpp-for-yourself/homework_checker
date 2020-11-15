@@ -140,8 +140,6 @@ class Task:
         return None  # Empty implementation.
 
 
-
-
 class CppTask(Task):
     """Define a C++ Task."""
 

@@ -3,37 +3,37 @@ name: CI
 on: [push]
 
 jobs:
-  lint:
+  setup:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-      - uses: psf/black@stable
-        with:
-          args: ". --check"
-
-  test:
-    runs-on: ubuntu-20.04
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Set up Python 3.8
+    - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.8'
         architecture: 'x64'
-
     - name: Install prerequisites
       run: |
         sudo apt install -y libgtest-dev
-        python -m pip install --upgrade pip pipenv
+        python -m pip install --upgrade pip pipenv black
+
+  lint:
+    needs: setup
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run Black linter
+      run: black homework_checker --check --diff
+
+  test:
+    needs: setup
+
+    steps:
+    - uses: actions/checkout@v2
 
     - name: Initialize workspace
       run: >
         pipenv install
 
-    - name: Test
+    - name: Run unit tests
       run: >
         pipenv run python3 -m unittest discover -v homework_checker/tests/
 
