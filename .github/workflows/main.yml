@@ -17,6 +17,7 @@ jobs:
         python -m pip install --upgrade pip pipenv black
 
   lint:
+    runs-on: ubuntu-20.04
     needs: setup
     steps:
     - uses: actions/checkout@v2
@@ -24,6 +25,7 @@ jobs:
       run: black homework_checker --check --diff
 
   test:
+    runs-on: ubuntu-20.04
     needs: setup
 
     steps:
