@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
 
-TEST(TestDummy, Blah) {
+TEST(TestDummy, AlwaysFail) {
   EXPECT_EQ(1, 0);
 }

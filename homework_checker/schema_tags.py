@@ -1,4 +1,5 @@
 """Collection of schema related tags."""
+from typing import Any
 
 
 class Tags:
@@ -49,14 +50,14 @@ class LangTags:
 class OneOf:
     """Check that an item is one of the list."""
 
-    def __init__(self, some_list):
+    def __init__(self: "OneOf", some_list: list):
         """Set the list to choose from."""
         self.__items = some_list
 
-    def __call__(self, item):
+    def __call__(self: "OneOf", item: Any):
         """Check that the list contains what is needed."""
         return item in self.__items
 
-    def __str__(self):
+    def __str__(self: "OneOf"):
         """Override str for this class."""
         return "Possible values: {}".format(self.__items)

@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 """Test the tools."""
+from __future__ import annotations
 
 import unittest
-from os import path
 
+from time import monotonic as timer
+from pathlib import Path
 from homework_checker import tools
 from homework_checker.schema_tags import OutputTags
 
@@ -11,15 +13,13 @@ from homework_checker.schema_tags import OutputTags
 class TestTools(unittest.TestCase):
     """Test the checker."""
 
-    def test_pkg_name(self):
+    def test_pkg_name(self: TestTools):
         """Pkg name test."""
         self.assertEqual(tools.PKG_NAME, "homework_checker")
-        if path.basename(tools.PROJECT_ROOT_FOLDER):
-            self.assertEqual(
-                path.basename(tools.PROJECT_ROOT_FOLDER), "homework_checker"
-            )
+        if tools.PROJECT_ROOT_FOLDER.exists():
+            self.assertEqual(tools.PROJECT_ROOT_FOLDER.name, "homework_checker")
 
-    def test_convert_to(self):
+    def test_convert_to(self: TestTools):
         """Test conversion to expected type."""
         output, error = tools.convert_to(OutputTags.NUMBER, "value")
         self.assertEqual(output, None)
@@ -33,23 +33,23 @@ class TestTools(unittest.TestCase):
         self.assertEqual(output, 3.14)
         self.assertEqual(error, "OK")
 
-    def test_max_date(self):
+    def test_max_date(self: TestTools):
         """Make sure we can rely on max date."""
         self.assertEqual(tools.MAX_DATE_STR, "9999-12-31 23:59:59")
 
-    def test_sleep_timeout(self):
+    def test_sleep_timeout(self: TestTools):
         """Test that we can break an endless loop."""
-        from time import monotonic as timer
-
         start = timer()
-        cmd_result = tools.run_command("sleep 10", timeout=1)
+        timout = 1
+        cmd_result = tools.run_command("sleep 10", timeout=timout)
         self.assertFalse(cmd_result.succeeded())
         self.assertLess(timer() - start, 5)
         self.assertEqual(
-            cmd_result.stderr, "Timeout: command 'sleep 10' ran longer than 1 seconds"
+            cmd_result.stderr,
+            "Timeout: command 'sleep 10' ran longer than {} seconds".format(timout),
         )
 
-    def test_git_url(self):
+    def test_git_url(self: TestTools):
         """Test that we can break an endless loop."""
         domain, user, project = tools.parse_git_url(
             "https://gitlab.ipb.uni-bonn.de/igor/some_project.git"
@@ -70,20 +70,18 @@ class TestTools(unittest.TestCase):
         self.assertEqual(user, "PRBonn")
         self.assertEqual(project, "depth_clustering")
 
-    def test_endless_loop_timeout(self):
+    def test_endless_loop_timeout(self: TestTools):
         """Test that we can break an endless loop."""
-        from time import monotonic as timer
-
-        path_to_data = path.join(path.dirname(__file__), "data")
-        path_to_file = path.join(path_to_data, "endless.cpp")
-        cmd_build = "c++ -o endless -O0 " + path_to_file
+        path_to_file = Path(__file__).parent / "data" / "endless.cpp"
+        cmd_build = "c++ -o endless -O0 {path}".format(path=str(path_to_file))
         cmd_result = tools.run_command(cmd_build)
-        print(cmd_result.stderr)
+        timout = 1
         self.assertTrue(cmd_result.succeeded())
         start = timer()
-        cmd_result = tools.run_command("./endless", timeout=2)
+        cmd_result = tools.run_command("./endless", timeout=timout)
         self.assertFalse(cmd_result.succeeded())
         self.assertLess(timer() - start, 5)
         self.assertEqual(
-            cmd_result.stderr, "Timeout: command './endless' ran longer than 2 seconds"
+            cmd_result.stderr,
+            "Timeout: command './endless' ran longer than {} seconds".format(timout),
         )
