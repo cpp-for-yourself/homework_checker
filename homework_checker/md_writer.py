@@ -1,6 +1,10 @@
 """Write test results into a markdown file."""
+from typing import Dict
+from pathlib import Path
 
 from .tools import EXPIRED_TAG
+from .tools import CmdResult
+from .checker import HomeworkResultDict
 
 TABLE_TEMPLATE = "| {hw_name} | {task_name} | {test_name} | {result_sign} |\n"
 TABLE_SEPARATOR = "|---|---|---|:---:|\n"
@@ -34,7 +38,7 @@ FAILED_TAG = "✘"
 class MdWriter:
     """Write given tests results into a markdown file."""
 
-    def __init__(self):
+    def __init__(self: "MdWriter"):
         """Initialize the writer."""
         self._md_table = TABLE_TEMPLATE.format(
             hw_name="Homework Name",
@@ -45,7 +49,7 @@ class MdWriter:
         self._md_table += TABLE_SEPARATOR
         self._errors = ""  # Markdown part with errors.
 
-    def update(self, hw_results):
+    def update(self: "MdWriter", hw_results: Dict[str, HomeworkResultDict]):
         """Update the table of completion."""
         for hw_name, hw_dict in sorted(hw_results.items()):
             need_hw_name = True
@@ -74,7 +78,7 @@ class MdWriter:
                     need_hw_name = False  # We only print homework name once.
                     need_task_name = False  # We only print Task name once.
 
-    def write_md_file(self, md_file_path):
+    def write_md_file(self: "MdWriter", md_file_path: Path):
         """Write all the added content to the md file."""
         md_file_content = "# Test results\n"
         md_file_content += self._md_table
@@ -86,7 +90,14 @@ class MdWriter:
         with open(md_file_path, "w") as md_file:
             md_file.write(md_file_content)
 
-    def _add_error(self, hw_name, task_name, test_name, test_result, expired):
+    def _add_error(
+        self: "MdWriter",
+        hw_name: str,
+        task_name: str,
+        test_name: str,
+        test_result: CmdResult,
+        expired: bool,
+    ):
         """Add a section of errors to the md file."""
         if test_result.succeeded():
             return

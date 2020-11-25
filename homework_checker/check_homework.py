@@ -34,7 +34,7 @@ def main():
     # Read the job file.
     log.debug('Reading from file "%s"', args.input)
     checker = Checker(args.input)
-    results = checker.check_homework()
+    results = checker.check_all_homeworks()
     md_writer = MdWriter()
     md_writer.update(results)
     # Write the resulting markdown file.

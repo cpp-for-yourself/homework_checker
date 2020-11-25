@@ -1,25 +1,31 @@
 """Manage creation of schema."""
+from __future__ import annotations
 import sys
 import logging
 import operator
-from os import path
-from schema import Schema, SchemaError, Or, Optional
-from ruamel.yaml import YAML
-from ruamel.yaml.comments import CommentedMap, CommentedSeq
+from pathlib import Path
+from typing import Union, List, Dict, Any
+from ruamel.yaml import YAML  # type: ignore[import]
+from ruamel.yaml.comments import CommentedMap, CommentedSeq  # type: ignore[import]
+from schema import Schema, SchemaError, Or, Optional  # type: ignore[import]
 
 from .tools import MAX_DATE_STR
 from .schema_tags import Tags, OutputTags, BuildTags, LangTags
 
 log = logging.getLogger("GHC")
 
-SCHEMA_FILE = path.join(path.dirname(path.dirname(__file__)), "schema", "schema.yml")
+SCHEMA_FILE = Path(__file__).parent.parent / "schema" / "schema.yml"
 
 
 class SchemaManager:
     """Manage schema creation."""
 
-    def __init__(self, file_name):
+    GenericListType = List[Union[Any, Dict[str, Any], List[Any]]]
+    GenericDictType = Dict[str, Union[Any, Dict[str, Any], List[Any]]]
+
+    def __init__(self: SchemaManager, file_name: Path):
         """Create a schema for my tests."""
+        # TODO(igor): simplify by moving parts out of here into separate variables.
         self.__schema = Schema(
             {
                 Tags.FOLDER_TAG: str,
@@ -63,8 +69,9 @@ class SchemaManager:
             }
         )
         yaml = YAML()
-        yaml.width = 4096  # big enough value to prevent wrapping
-        yaml.explicit_start = True
+        # big enough value to prevent wrapping
+        yaml.width = 4096  # type: ignore[assignment]
+        yaml.explicit_start = True  # type: ignore[assignment]
         yaml.indent(mapping=2, sequence=4, offset=2)
         with open(file_name, "r") as stream:
             contents = SchemaManager.__to_simple_dict(yaml.load(stream))
@@ -83,8 +90,11 @@ class SchemaManager:
         except OSError:
             log.debug("Cannot write schema file. We only use this while developing.")
 
-    def __to_simple_list(commented_seq):
-        simple_list = []
+    @staticmethod
+    def __to_simple_list(
+        commented_seq: List[Union[Any, CommentedSeq, CommentedMap]]
+    ) -> SchemaManager.GenericListType:
+        simple_list: SchemaManager.GenericListType = []
         for value in commented_seq:
             if isinstance(value, CommentedSeq):
                 simple_list.append(SchemaManager.__to_simple_list(value))
@@ -94,8 +104,11 @@ class SchemaManager:
                 simple_list.append(value)
         return simple_list
 
-    def __to_simple_dict(commented_map):
-        simple_dict = {}
+    @staticmethod
+    def __to_simple_dict(
+        commented_map: Dict[str, Union[Any, CommentedSeq, CommentedMap]],
+    ) -> SchemaManager.GenericDictType:
+        simple_dict: SchemaManager.GenericDictType = {}
         for key, value in commented_map.items():
             if isinstance(value, CommentedMap):
                 simple_dict[key] = SchemaManager.__to_simple_dict(value)
@@ -106,7 +119,7 @@ class SchemaManager:
         return simple_dict
 
     @property
-    def validated_yaml(self):
+    def validated_yaml(self) -> dict:
         """Return validated yaml."""
         return self.__validated_yaml
 
@@ -115,9 +128,13 @@ class SchemaManager:
         """Return schema."""
         return self.__schema
 
+    # pylint: disable=R0911
+    # This method needs this many returns.
     @staticmethod
-    def __sanitize_value(input_var):
+    def __sanitize_value(input_var: Union[dict, Optional, Or, Any]):
         """Use the schema and create an example file from it."""
+        # pylint: disable=W0212
+        # This seems to be the only way to get to schema value.
         if isinstance(input_var, dict):
             new_dict = {}
             for key, val in input_var.items():

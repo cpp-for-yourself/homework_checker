@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """Test the checker."""
+from __future__ import annotations
 
 import unittest
 
@@ -11,15 +12,20 @@ from homework_checker import tasks
 class TestChecker(unittest.TestCase):
     """Test the checker."""
 
-    def test_everything(self):
+    def test_everything(self: TestChecker):
         """Check all homeworks and Tasks."""
-        self.maxDiff = None
-
-        checker = Checker("homework_checker/tests/data/homework/example_job.yml")
-        results = checker.check_homework()
+        path_to_job = (
+            tools.PROJECT_ROOT_FOLDER
+            / "homework_checker"
+            / "tests"
+            / "data"
+            / "homework"
+            / "example_job.yml"
+        )
+        checker = Checker(path_to_job)
+        results = checker.check_all_homeworks()
         self.assertEqual(len(results), 3)
         self.assertEqual(len(results["Homework 1"]), 4)
-        print(results["Homework 1"]["Task 1"])
         self.assertEqual(len(results["Homework 1"]["Task 1"]), 3)
         self.assertEqual(len(results["Homework 2"]), 4)
         self.assertEqual(results["Homework 1"]["Task 1"]["Test 1"].stderr, "")
@@ -50,7 +56,6 @@ class TestChecker(unittest.TestCase):
             "Timeout: command './main' ran longer than 20 seconds",
         )
 
-        print(results)
         self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Just build"])
         self.assertTrue(results["Homework 3"]["Google Tests"]["Just build"].succeeded())
         self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Inject pass"])

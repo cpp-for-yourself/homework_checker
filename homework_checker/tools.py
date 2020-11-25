@@ -1,16 +1,21 @@
 """Handle various utility tasks."""
-from os import path
-from os import makedirs
+from __future__ import annotations
+import os
+import re
 from os import environ
+from subprocess import Popen, TimeoutExpired, CalledProcessError, CompletedProcess
+from typing import Union, List, Optional, Mapping, Any, Tuple
+from pathlib import Path
 import tempfile
 import subprocess
 import logging
 import datetime
+import signal
 
 from .schema_tags import OutputTags
 
 PKG_NAME = "homework_checker"
-PROJECT_ROOT_FOLDER = path.abspath(path.dirname(path.dirname(__file__)))
+PROJECT_ROOT_FOLDER = Path(__file__).parent.parent
 DATE_PATTERN = "%Y-%m-%d %H:%M:%S"
 MAX_DATE_STR = datetime.datetime.max.strftime(DATE_PATTERN)
 
@@ -19,50 +24,45 @@ EXPIRED_TAG = "expired"
 log = logging.getLogger("GHC")
 
 
-def get_temp_dir():
+def get_temp_dir() -> Path:
     """Create a temporary folder if needed and return it."""
-    tempdir = path.join(tempfile.gettempdir(), PKG_NAME)
-    if not path.exists(tempdir):
-        makedirs(tempdir)
+    tempdir = Path(tempfile.gettempdir(), PKG_NAME)
+    tempdir.mkdir(parents=True, exist_ok=True)
     return tempdir
 
 
-def create_folder_if_needed(directory):
-    """Create a folder if it does not exist."""
-    if not path.exists(directory):
-        makedirs(directory)
-
-
-def expand_if_needed(input_path):
+def expand_if_needed(input_path: Path) -> Path:
     """Expand the path if it is not absolute."""
-    if path.isabs(input_path):
-        return input_path
-    new_path = path.expanduser(input_path)
-    if path.isabs(new_path):
+    if input_path.is_absolute():
+        return Path(input_path)
+    new_path = input_path.expanduser()
+    if new_path.is_absolute():
         # This path needed user expansion. Now that the user home directory is
         # expanded this is a full absolute path.
         return new_path
     # The user could not be expanded, so we assume it is just another relative
     # path to the project directory. Mostly used for testing purposes here.
-    return path.join(PROJECT_ROOT_FOLDER, new_path)
+    return Path(PROJECT_ROOT_FOLDER, new_path)
 
 
-def convert_to(output_type, value):
+def convert_to(
+    output_type: int, value: Any
+) -> Union[Tuple[Optional[str], str], Tuple[Optional[float], str]]:
     """Convert the value to a specified type."""
     if not value:
-        return None, "No value. Cannot convert to '{}'.".format(output_type)
+        return None, "No value. Cannot convert {} to '{}'.".format(value, output_type)
     try:
         if output_type == OutputTags.STRING:
-            result = str(value).strip()
+            return str(value).strip(), "OK"
         if output_type == OutputTags.NUMBER:
-            result = float(value)
-    except ValueError as e:
-        log.error("Exception: %s.", e)
-        return None, str(e)
-    return result, "OK"
+            return float(value), "OK"
+    except ValueError as error:
+        log.error("Exception: %s.", error)
+        return None, str(error)
+    return None, "Unknown output type {}. Cannot convert.".format(output_type)
 
 
-def parse_git_url(git_url):
+def parse_git_url(git_url: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     """Parse the git url.
 
     Args:
@@ -71,8 +71,6 @@ def parse_git_url(git_url):
     Returns:
         (str, str, str): tupple of domain, user and project name parsed from url
     """
-    import re
-
     regex = re.compile(
         r"(?:git@|https:\/\/)"  # Prefix
         r"([\w\-_\.]+)"  # Domain
@@ -82,7 +80,10 @@ def parse_git_url(git_url):
         r"([\w\-_]+)"  # Project name
         r"(?:.git)*$"
     )  # .git or nothing
-    domain, user, project = regex.search(git_url).groups()
+    match = regex.search(git_url)
+    if not match:
+        return None, None, None
+    domain, user, project = match.groups()
     return domain, user, project
 
 
@@ -92,13 +93,15 @@ class CmdResult:
     SUCCESS = 0
     FAILURE = 13
 
-    def __init__(self, returncode=None, stdout=None, stderr=None):
+    def __init__(
+        self: CmdResult, returncode: int = None, stdout: str = None, stderr: str = None
+    ):
         """Initialize either stdout of stderr."""
         self._returncode = returncode
         self._stdout = stdout
         self._stderr = stderr
 
-    def succeeded(self):
+    def succeeded(self: CmdResult) -> bool:
         """Check if the command succeeded."""
         if self.returncode is not None:
             return self.returncode == CmdResult.SUCCESS
@@ -107,31 +110,31 @@ class CmdResult:
         return True
 
     @property
-    def returncode(self):
+    def returncode(self: CmdResult) -> Optional[int]:
         """Get returncode."""
         return self._returncode
 
     @property
-    def stdout(self):
+    def stdout(self: CmdResult) -> Optional[str]:
         """Get stdout."""
         return self._stdout
 
     @property
-    def stderr(self):
+    def stderr(self: CmdResult) -> Optional[str]:
         """Get stderr."""
         return self._stderr
 
     @stderr.setter
-    def stderr(self, value):
+    def stderr(self, value: str):
         self._returncode = None  # We can't rely on returncode anymore
         self._stderr = value
 
     @staticmethod
-    def success():
+    def success() -> CmdResult:
         """Return a cmd result that is a success."""
         return CmdResult(stdout="Success!")
 
-    def __repr__(self):
+    def __repr__(self: CmdResult) -> str:
         """Representatin of command result."""
         stdout = self.stdout
         if not stdout:
@@ -141,7 +144,13 @@ class CmdResult:
         return stdout.strip()
 
 
-def run_command(command, shell=True, cwd=path.curdir, env=environ, timeout=20):
+def run_command(
+    command: Union[List[str], str],
+    shell: bool = True,
+    cwd: Path = Path.cwd(),
+    env: Optional[Mapping[str, Any]] = None,
+    timeout: float = 20,
+) -> CmdResult:
     """Run a generic command in a subprocess.
 
     Args:
@@ -154,12 +163,14 @@ def run_command(command, shell=True, cwd=path.curdir, env=environ, timeout=20):
         if shell and isinstance(command, list):
             command = subprocess.list2cmdline(command)
             log.debug("running command: \n%s", command)
+        if env is None:
+            env = environ
         process = __run_subprocess(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=shell,
-            cwd=cwd,
+            cwd=str(cwd),
             env=env,
             startupinfo=startupinfo,
             timeout=timeout,
@@ -169,20 +180,26 @@ def run_command(command, shell=True, cwd=path.curdir, env=environ, timeout=20):
             stdout=process.stdout.decode("utf-8"),
             stderr=process.stderr.decode("utf-8"),
         )
-    except subprocess.CalledProcessError as e:
-        output_text = e.output.decode("utf-8")
-        log.error("command '%s' finished with code: %s", e.cmd, e.returncode)
+    except subprocess.CalledProcessError as error:
+        output_text = error.output.decode("utf-8")
+        log.error("command '%s' finished with code: %s", error.cmd, error.returncode)
         log.debug("command output: \n%s", output_text)
-        return CmdResult(returncode=e.returncode, stderr=output_text)
-    except subprocess.TimeoutExpired as e:
+        return CmdResult(returncode=error.returncode, stderr=output_text)
+    except subprocess.TimeoutExpired as error:
         output_text = "Timeout: command '{}' ran longer than {} seconds".format(
-            e.cmd.strip(), e.timeout
+            error.cmd.strip(), error.timeout
         )
         log.error(output_text)
         return CmdResult(returncode=1, stderr=output_text)
 
 
-def __run_subprocess(command, input=None, timeout=None, check=False, **kwargs):
+def __run_subprocess(
+    command: Union[List[str], str],
+    str_input: str = None,
+    timeout: float = None,
+    check: bool = False,
+    **kwargs
+) -> subprocess.CompletedProcess:
     """Run a command as a subprocess.
 
     Using the guide from StackOverflow:
@@ -195,24 +212,26 @@ def __run_subprocess(command, input=None, timeout=None, check=False, **kwargs):
     shell=True. The reason I don't want to stop using shell=True here is the
     convenience of piping arguments from one function to another.
     """
-    if input is not None:
+    if str_input is not None:
         if "stdin" in kwargs:
-            raise ValueError("stdin and input arguments may not both be used.")
+            raise ValueError("stdin and str_input arguments may not both be used.")
         kwargs["stdin"] = subprocess.PIPE
-    import os
-    import signal
-    from subprocess import Popen, TimeoutExpired, CalledProcessError
-    from subprocess import CompletedProcess
 
-    with Popen(command, preexec_fn=os.setsid, **kwargs) as process:
+    if timeout is None:
+        timeout = 20
+    with Popen(command, start_new_session=True, **kwargs) as process:
         try:
-            stdout, stderr = process.communicate(input, timeout=timeout)
-        except TimeoutExpired:
+            stdout, stderr = process.communicate(str_input, timeout=timeout)
+        except TimeoutExpired as timeout_error:
             # Kill the whole group of processes.
             os.killpg(process.pid, signal.SIGINT)
             stdout, stderr = process.communicate()
-            raise TimeoutExpired(process.args, timeout, output=stdout, stderr=stderr)
+            raise TimeoutExpired(
+                process.args, timeout, output=stdout, stderr=stderr
+            ) from timeout_error
         retcode = process.poll()
+        if retcode is None:
+            retcode = 1
         if check and retcode:
             raise CalledProcessError(
                 retcode, process.args, output=stdout, stderr=stderr
