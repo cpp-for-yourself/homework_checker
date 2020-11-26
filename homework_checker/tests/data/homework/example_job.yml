@@ -97,11 +97,13 @@ homeworks:
           - name: Inject pass
             run_google_tests: True
             inject_folders:
-              - solutions/pass/tests
+              - source: solutions/pass/tests  # Relative to solutions folder
+                destination: tests  # Relative to the code source folder
           - name: Inject fail
             run_google_tests: True
             inject_folders:
-              - solutions/fail/tests
+              - source: solutions/fail/tests
+                destination: tests
       - name: Bash with many folders
         language: bash
         folder: bashtests
@@ -110,8 +112,10 @@ homeworks:
         tests:
           - name: ls
             inject_folders: # Just multiple folders.
-              - solutions/fail
-              - solutions/pass
+              - source: solutions/fail
+                destination: fail
+              - source: solutions/pass
+                destination: pass
             expected_output: |  # This maintains whitespaces.
               fail
               ls_me.sh

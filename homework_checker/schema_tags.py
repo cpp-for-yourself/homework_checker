@@ -13,6 +13,8 @@ class Tags:
     FOLDER_TAG = "folder"
     HOMEWORKS_TAG = "homeworks"
     INJECT_FOLDER_TAG = "inject_folders"
+    INJECT_SOURCE_TAG = "source"
+    INJECT_DESTINATION_TAG = "destination"
     INPUT_TAG = "input_args"
     LANGUAGE_TAG = "language"
     NAME_TAG = "name"

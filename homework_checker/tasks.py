@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import abc
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from shutil import copytree, move, rmtree
 
 from . import tools
@@ -31,6 +31,13 @@ class Task:
 
     ResultDictType = Dict[str, tools.CmdResult]
 
+    class Injection:
+        """docstring for Injection"""
+
+        def __init__(self: Task.Injection, source: Path, destination: Path):
+            self.source = source
+            self.destination = destination
+
     @staticmethod
     def from_yaml_node(
         task_node: dict, student_hw_folder: Path, job_file: Path
@@ -55,95 +62,100 @@ class Task:
         self.name = task_node[Tags.NAME_TAG]
         self._job_yaml_folder = job_file.parent
         self._output_type = task_node[Tags.OUTPUT_TYPE_TAG]
-        self._cwd = student_task_folder
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
         self._pipe_through = task_node[Tags.PIPE_TAG]
-        self._backup_folder = student_task_folder / Task.BACKUP_FOLDER
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
         else:
             self._test_nodes = []  # Sometimes we don't have tests.
         self._task_node = task_node
 
-    def check_all_tests(self: Task) -> Task.ResultDictType:
+    def check(self: Task) -> Task.ResultDictType:
         """Iterate over the tests and check them."""
         # Generate empty results.
         results: Task.ResultDictType = {}
+
+        def run_all_tests(
+            test_node: dict, executable_folder: Path
+        ) -> Task.ResultDictType:
+            """Run all tests in the task."""
+            results: Task.ResultDictType = {}
+            if Tags.INJECT_FOLDER_TAG not in test_node:
+                # There is no need to rebuild the code. We can just run our tests.
+                test_result = self._run_test(test_node, executable_folder)
+                results[test_node[Tags.NAME_TAG]] = test_result
+                return {}
+            # There are folders to inject, so we will have to rebuild.
+            with tools.TempDirCopy(
+                source_folder=self._student_task_folder, prefix="injected"
+            ) as new_code_folder:
+                folders_to_inject = self.__get_folders_to_inject(
+                    node=test_node, destination_root=new_code_folder
+                )
+                Task.__inject_folders(folders_to_inject)
+                build_result, build_folder = self._build_if_needed(new_code_folder)
+                assert (
+                    build_result.succeeded()
+                ), "Build with inserted folders must ALWAYS succeed!"
+                test_result = self._run_test(
+                    test_node=test_node, executable_folder=build_folder
+                )
+                results[test_node[Tags.NAME_TAG]] = test_result
+            return results
+
         # Build the source if this is needed.
-        injected_folders = self.__inject_folders_if_needed(self._task_node)
-        build_result = self._build_if_needed()
-        # TODO(igor): cleanup after build
-        self.__restore_injected_folders(self._task_node, injected_folders)
-        if build_result:
-            results[BUILD_SUCCESS_TAG] = build_result
-            if not build_result.succeeded():
-                # The build has failed, so no further testing needed.
-                return results
-        # The build is either not needed or succeeded. Continue testing.
-        for test_node in self._test_nodes:
-            injected_folders = self.__inject_folders_if_needed(test_node)
-            test_result = self._run_test(test_node)
-            self.__restore_injected_folders(test_node, injected_folders)
-            results[test_node[Tags.NAME_TAG]] = test_result
+        with tools.TempDirCopy(self._student_task_folder) as code_folder:
+            build_result, build_folder = self._build_if_needed(code_folder)
+            if build_result:
+                results[BUILD_SUCCESS_TAG] = build_result
+                if not build_result.succeeded():
+                    # The build has failed, so no further testing needed.
+                    return results
+            # The build is either not needed or succeeded. Continue testing.
+            for test_node in self._test_nodes:
+                results.update(
+                    run_all_tests(test_node=test_node, executable_folder=build_folder)
+                )
+
         style_errors = self._code_style_errors()
         if style_errors:
             results[STYLE_ERROR_TAG] = style_errors
         return results
 
-    def inject_folder(self: Task, dest_folder_name: str, inject_folder: Path):
-        """Inject a folder into the student's code."""
-        # TODO(igor): specify the destination folder in yaml
-        # TODO(igor): make injection a wrapper
-        full_path_from = inject_folder
-        if not full_path_from.is_absolute():
-            full_path_from = self._job_yaml_folder / full_path_from
-        full_path_to = self._student_task_folder / dest_folder_name
-        if not self._backup_folder.is_dir():
-            self._backup_folder.mkdir(parents=True, exist_ok=True)
-
-        if full_path_to.exists():
-            # Move the existing data to the backup folder if needed.
-            dest = move(str(full_path_to), str(self._backup_folder))
-        copytree(full_path_from, full_path_to)
-
-    def revert_injections(self: Task, dest_folder_name: str):
-        """Revert injections from the backup folder."""
-        injected_folder = self._student_task_folder / dest_folder_name
-        backed_up_folder = self._backup_folder / dest_folder_name
-        if injected_folder.exists() and injected_folder.is_dir():
-            rmtree(injected_folder)
-        if not backed_up_folder.exists():
-            # There is no backup, so nothing to restore.
-            return
-        move(str(backed_up_folder), str(self._student_task_folder))
-
-    def __inject_folders_if_needed(self: Task, node: dict) -> List[Path]:
-        injected_folders = []
+    def __get_folders_to_inject(
+        self: Task, node: dict, destination_root: Path
+    ) -> List[Injection]:
+        folders_to_inject = []
         if Tags.INJECT_FOLDER_TAG in node:
             # Inject all needed folders.
-            for folder in node[Tags.INJECT_FOLDER_TAG]:
-                inject_folder = self._job_yaml_folder / folder
-                # TODO(igor): destination path must be specified in yaml
-                self.inject_folder(Path(folder).name, inject_folder)
-                injected_folders.append(folder)
-        return injected_folders
+            for injection in node[Tags.INJECT_FOLDER_TAG]:
+                source_folder = (
+                    self._job_yaml_folder / injection[Tags.INJECT_SOURCE_TAG]
+                )
+                destination_folder = (
+                    destination_root / injection[Tags.INJECT_DESTINATION_TAG]
+                )
+                folders_to_inject.append(
+                    Task.Injection(source=source_folder, destination=destination_folder)
+                )
+        return folders_to_inject
 
-    def __restore_injected_folders(
-        self: Task, node: dict, injected_folders: List[Path]
-    ):
-        if Tags.INJECT_FOLDER_TAG in node:
-            for folder in injected_folders:
-                self.revert_injections(Path(folder).name)
-            rmtree(self._backup_folder)
+    @staticmethod
+    def __inject_folders(folders_to_inject: List[Task.Injection]):
+        """Inject all folders overwriting existing folders in case of conflict."""
+        for injection in folders_to_inject:
+            if injection.destination.exists():
+                rmtree(injection.destination)
+            copytree(injection.source, injection.destination)
 
     @abc.abstractmethod
-    def _run_test(self: Task, test_node: dict):
+    def _run_test(self: Task, test_node: dict, executable_folder: Path):
         return None
 
     @abc.abstractmethod
-    def _build_if_needed(self: Task):
-        return None
+    def _build_if_needed(self: Task, code_folder: Path):
+        return None, code_folder
 
     @abc.abstractmethod
     def _code_style_errors(self: Task):
@@ -153,11 +165,6 @@ class Task:
     def student_task_folder(self: Task):
         """Get the folder with the student's task."""
         return self._student_task_folder
-
-    @property
-    def backup_folder(self: Task):
-        """Get the folder with the backup of any overwritten by injection folders."""
-        return self._backup_folder
 
 
 class CppTask(Task):
@@ -172,19 +179,28 @@ class CppTask(Task):
         super().__init__(task_node, root_folder, job_file)
         self._compiler_flags = task_node[Tags.COMPILER_FLAGS_TAG]
         self._build_type = task_node[Tags.BUILD_TYPE_TAG]
-        if self._build_type == BuildTags.CMAKE:
-            # The cmake project will always work from build folder.
-            self._cwd = self._cwd / "build"
-            self._cwd.mkdir(parents=True, exist_ok=True)
 
-    def _build_if_needed(self: CppTask) -> tools.CmdResult:
+    def _build_if_needed(
+        self: CppTask, code_folder: Path
+    ) -> Tuple[tools.CmdResult, Path]:
+        # TODO(igor): remove the hardcoded timeout here.
         if self._build_type == BuildTags.CMAKE:
-            return tools.run_command(CppTask.CMAKE_BUILD_CMD, cwd=self._cwd, timeout=60)
-        return tools.run_command(
-            CppTask.BUILD_CMD_SIMPLE.format(
-                binary=self._binary_name, compiler_flags=self._compiler_flags
+            build_folder = code_folder / "build"
+            build_folder.mkdir(parents=True, exist_ok=True)
+            return (
+                tools.run_command(
+                    CppTask.CMAKE_BUILD_CMD, cwd=build_folder, timeout=60
+                ),
+                build_folder,
+            )
+        return (
+            tools.run_command(
+                CppTask.BUILD_CMD_SIMPLE.format(
+                    binary=self._binary_name, compiler_flags=self._compiler_flags
+                ),
+                cwd=code_folder,
             ),
-            cwd=self._cwd,
+            code_folder,
         )
 
     def _code_style_errors(self: CppTask) -> Optional[tools.CmdResult]:
@@ -203,10 +219,12 @@ class CppTask(Task):
             return result
         return None
 
-    def _run_test(self: CppTask, test_node: dict):
+    def _run_test(self: CppTask, test_node: dict, executable_folder: Path):
         # TODO(igor): remove the hardcoded timeout here.
         if test_node[Tags.RUN_GTESTS_TAG]:
-            return tools.run_command(CppTask.REMAKE_AND_TEST, cwd=self._cwd, timeout=60)
+            return tools.run_command(
+                CppTask.REMAKE_AND_TEST, cwd=executable_folder, timeout=60
+            )
         input_str = ""
         if Tags.INPUT_TAG in test_node:
             input_str = test_node[Tags.INPUT_TAG]
@@ -215,7 +233,7 @@ class CppTask(Task):
         )
         if self._pipe_through:
             run_cmd += " " + self._pipe_through
-        run_result = tools.run_command(run_cmd, cwd=self._cwd)
+        run_result = tools.run_command(run_cmd, cwd=executable_folder)
         if not run_result.succeeded():
             return run_result
         # TODO(igor): do I need explicit error here?
@@ -243,20 +261,22 @@ class BashTask(Task):
         """Initialize the Task."""
         super().__init__(task_node, root_folder, job_file)
 
-    def _build_if_needed(self: BashTask):
-        return None  # There is nothing to build in Bash.
+    def _build_if_needed(self: BashTask, code_folder: Path):
+        return None, code_folder  # There is nothing to build in Bash.
 
     def _code_style_errors(self: BashTask):
         return None
 
-    def _run_test(self: BashTask, test_node: dict) -> tools.CmdResult:
+    def _run_test(
+        self: BashTask, test_node: dict, executable_folder: Path
+    ) -> tools.CmdResult:
         input_str = ""
         if Tags.INPUT_TAG in test_node:
             input_str = test_node[Tags.INPUT_TAG]
         run_cmd = BashTask.RUN_CMD.format(binary_name=self._binary_name, args=input_str)
         if self._pipe_through:
             run_cmd += " " + self._pipe_through
-        run_result = tools.run_command(run_cmd, cwd=self._cwd)
+        run_result = tools.run_command(run_cmd, cwd=executable_folder)
         if not run_result.succeeded():
             return run_result
         our_output, error = tools.convert_to(self._output_type, run_result.stdout)

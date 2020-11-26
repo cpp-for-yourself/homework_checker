@@ -11,6 +11,8 @@ import subprocess
 import logging
 import datetime
 import signal
+import shutil
+import hashlib
 
 from .schema_tags import OutputTags
 
@@ -22,6 +24,41 @@ MAX_DATE_STR = datetime.datetime.max.strftime(DATE_PATTERN)
 EXPIRED_TAG = "expired"
 
 log = logging.getLogger("GHC")
+
+
+def get_unique_str(seed: str) -> str:
+    """Generate md5 unique sting hash given init_string."""
+    return hashlib.md5(seed.encode("utf-8")).hexdigest()
+
+
+class TempDirCopy:
+    """docstring for TempDirCopy"""
+
+    def __init__(self: TempDirCopy, source_folder: Path, prefix: Optional[str] = None):
+        if prefix:
+            unique_temp_folder_name = "{prefix}_{name}_{unique_hash}".format(
+                prefix=prefix,
+                name=source_folder.name,
+                unique_hash=get_unique_str(str(source_folder)),
+            )
+        else:
+            unique_temp_folder_name = "{name}_{unique_hash}".format(
+                name=source_folder.name,
+                unique_hash=get_unique_str(str(source_folder)),
+            )
+        self.__temporary_folder = (
+            Path(tempfile.gettempdir()) / PKG_NAME / unique_temp_folder_name
+        )
+
+    def __enter__(self: TempDirCopy) -> Path:
+        assert (
+            not self.__temporary_folder.exists()
+        ), "Cannot create a temporary folder as it already exists."
+        self.__temporary_folder.mkdir(parents=True, exist_ok=True)
+        return self.__temporary_folder
+
+    def __exit__(self: TempDirCopy, *exc_info: Any):
+        shutil.rmtree(self.__temporary_folder)
 
 
 def get_temp_dir() -> Path:
