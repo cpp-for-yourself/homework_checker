@@ -75,6 +75,7 @@ class Task:
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
         self._pipe_through = task_node[Tags.PIPE_TAG]
+        self._build_timeout = task_node[Tags.BUILD_TIMEOUT_TAG]
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
         else:
@@ -187,13 +188,14 @@ class CppTask(Task):
     def _build_if_needed(
         self: CppTask, code_folder: Path
     ) -> Tuple[tools.CmdResult, Path]:
-        # TODO(igor): remove the hardcoded timeout here.
         if self._build_type == BuildTags.CMAKE:
             build_folder = code_folder / "build"
             build_folder.mkdir(parents=True, exist_ok=True)
             return (
                 tools.run_command(
-                    CppTask.CMAKE_BUILD_CMD, cwd=build_folder, timeout=60
+                    CppTask.CMAKE_BUILD_CMD,
+                    cwd=build_folder,
+                    timeout=self._build_timeout,
                 ),
                 build_folder,
             )
@@ -203,6 +205,7 @@ class CppTask(Task):
                     binary=self._binary_name, compiler_flags=self._compiler_flags
                 ),
                 cwd=code_folder,
+                timeout=self._build_timeout,
             ),
             code_folder,
         )
@@ -216,7 +219,11 @@ class CppTask(Task):
             + "-runtime/arrays"
             + ' $( find . -name "*.h" -o -name "*.cpp" | grep -vE "^./build/" )'
         )
-        result = tools.run_command(command, cwd=self._student_task_folder)
+        result = tools.run_command(
+            command,
+            cwd=self._student_task_folder,
+            timeout=self._build_timeout,
+        )
         if result.stderr and TOTAL_ERRORS_FOUND_TAG in result.stderr:
             return result
         if result.stdout and TOTAL_ERRORS_FOUND_TAG in result.stdout:
@@ -224,10 +231,11 @@ class CppTask(Task):
         return None
 
     def _run_test(self: CppTask, test_node: dict, executable_folder: Path):
-        # TODO(igor): remove the hardcoded timeout here.
         if test_node[Tags.RUN_GTESTS_TAG]:
             return tools.run_command(
-                CppTask.REMAKE_AND_TEST, cwd=executable_folder, timeout=60
+                CppTask.REMAKE_AND_TEST,
+                cwd=executable_folder,
+                timeout=test_node[Tags.TIMEOUT_TAG],
             )
         input_str = ""
         if Tags.INPUT_TAG in test_node:
@@ -237,7 +245,9 @@ class CppTask(Task):
         )
         if self._pipe_through:
             run_cmd += " " + self._pipe_through
-        run_result = tools.run_command(run_cmd, cwd=executable_folder)
+        run_result = tools.run_command(
+            run_cmd, cwd=executable_folder, timeout=test_node[Tags.TIMEOUT_TAG]
+        )
         if not run_result.succeeded():
             return run_result
         # TODO(igor): do I need explicit error here?
@@ -280,7 +290,9 @@ class BashTask(Task):
         run_cmd = BashTask.RUN_CMD.format(binary_name=self._binary_name, args=input_str)
         if self._pipe_through:
             run_cmd += " " + self._pipe_through
-        run_result = tools.run_command(run_cmd, cwd=executable_folder)
+        run_result = tools.run_command(
+            run_cmd, cwd=executable_folder, timeout=test_node[Tags.TIMEOUT_TAG]
+        )
         if not run_result.succeeded():
             return run_result
         our_output, error = tools.convert_to(self._output_type, run_result.stdout)

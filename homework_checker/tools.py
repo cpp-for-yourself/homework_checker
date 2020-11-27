@@ -183,10 +183,10 @@ class CmdResult:
 
 def run_command(
     command: Union[List[str], str],
+    timeout: float,
     shell: bool = True,
     cwd: Path = Path.cwd(),
     env: Optional[Mapping[str, Any]] = None,
-    timeout: float = 20,
 ) -> CmdResult:
     """Run a generic command in a subprocess.
 

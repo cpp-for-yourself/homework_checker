@@ -70,6 +70,7 @@ homeworks:
         build_type: simple
         tests:
           - name: Test timeout  # Should fail because of the timeout.
+            timeout: 2.0
             expected_output: "irrelevant"
       - name: Non existing task  # Non existing Task
         language: cpp

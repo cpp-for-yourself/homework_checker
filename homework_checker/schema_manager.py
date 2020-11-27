@@ -37,6 +37,7 @@ class SchemaManager:
             Optional(Tags.INJECT_FOLDER_TAG): [injection_schema],
             Optional(Tags.RUN_GTESTS_TAG, default=False): bool,
             Optional(Tags.EXPECTED_OUTPUT_TAG): Or(str, float, int),
+            Optional(Tags.TIMEOUT_TAG, default=60): float,
         }
 
         task_schema = {
@@ -52,6 +53,7 @@ class SchemaManager:
             Optional(Tags.BUILD_TYPE_TAG, default=BuildTags.CMAKE): Or(
                 BuildTags.CMAKE, BuildTags.SIMPLE
             ),
+            Optional(Tags.BUILD_TIMEOUT_TAG, default=60): float,
             Optional(Tags.TESTS_TAG): [test_schema],
         }
 

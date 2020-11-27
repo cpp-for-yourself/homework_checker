@@ -101,7 +101,7 @@ class TestTask(unittest.TestCase):
         results = task.check()
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 2
-        expected_number_of_code_style_outputs = 1
+        expected_number_of_code_style_outputs = 0
         self.assertEqual(
             len(results),
             expected_number_of_build_outputs
@@ -112,7 +112,6 @@ class TestTask(unittest.TestCase):
         self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
         self.assertTrue(results["Test integer arithmetics"].succeeded())
         self.assertFalse(results["Test float arithmetics"].succeeded())
-        self.assertFalse(results[STYLE_ERROR_TAG].succeeded())
 
     def test_check_bash_task(self: "TestTask"):
         """Check a simple cmake build on arithmetics example."""
@@ -183,9 +182,11 @@ class TestTask(unittest.TestCase):
         )
         self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
         self.assertFalse(results["Test timeout"].succeeded())
-        self.assertEqual(
+        if not results["Test timeout"].stderr:
+            self.fail()
+        self.assertRegex(
             results["Test timeout"].stderr,
-            "Timeout: command './main' ran longer than 20 seconds",
+            r"Timeout: command './main' ran longer than .* seconds",
         )
 
     def test_google_tests_task(self: "TestTask"):

@@ -6,15 +6,16 @@ class Tags:
     """List of tags available."""
 
     BINARY_NAME_TAG = "binary_name"
+    BUILD_TIMEOUT_TAG = "build_timeout"
     BUILD_TYPE_TAG = "build_type"
     COMPILER_FLAGS_TAG = "compiler_flags"
     DEADLINE_TAG = "submit_by"
     EXPECTED_OUTPUT_TAG = "expected_output"
     FOLDER_TAG = "folder"
     HOMEWORKS_TAG = "homeworks"
+    INJECT_DESTINATION_TAG = "destination"
     INJECT_FOLDER_TAG = "inject_folders"
     INJECT_SOURCE_TAG = "source"
-    INJECT_DESTINATION_TAG = "destination"
     INPUT_TAG = "input_args"
     LANGUAGE_TAG = "language"
     NAME_TAG = "name"
@@ -23,6 +24,7 @@ class Tags:
     RUN_GTESTS_TAG = "run_google_tests"
     TASKS_TAG = "tasks"
     TESTS_TAG = "tests"
+    TIMEOUT_TAG = "timeout"
 
 
 class OutputTags:
