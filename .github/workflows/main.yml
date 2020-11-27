@@ -3,7 +3,24 @@ name: CI
 on: [push]
 
 jobs:
+  upload_progress_bar_to_wiki:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository }}.wiki
+        path: wiki
+    - run: |
+        cd wiki
+        printf '%s\n%s\n%s\n' "## Test is running" "![](progress.gif)" "$(cat Home.md)" > Home.md
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "generated"
+        git push
+
   test:
+    needs: upload_progress_bar_to_wiki
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -30,6 +47,7 @@ jobs:
       with:
         name: homework_result
         path: results.md
+
   upload_to_wiki:
     needs: test
     runs-on: ubuntu-20.04
