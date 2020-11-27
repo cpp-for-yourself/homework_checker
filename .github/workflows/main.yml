@@ -5,7 +5,6 @@ on: [push]
 jobs:
   test:
     runs-on: ubuntu-20.04
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -26,14 +25,13 @@ jobs:
     - name: Run unit tests
       run: >
         pipenv run python3 -m unittest discover -v homework_checker/tests/
-
   report:
     needs: test
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: git@$github.com:{{ github.repository }}.wiki.git
+          repository: git@github.com:${{ github.repository }}.wiki.git
       - run: |
           date > generated.md
           git config user.name github-actions
