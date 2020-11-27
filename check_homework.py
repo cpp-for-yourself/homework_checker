@@ -3,8 +3,8 @@
 import argparse
 import logging
 
-from .checker import Checker
-from .md_writer import MdWriter
+from homework_checker.checker import Checker
+from homework_checker.md_writer import MdWriter
 
 
 logging.basicConfig()
