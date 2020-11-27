@@ -93,14 +93,14 @@ class TestTools(unittest.TestCase):
         """Test that we can break an endless loop."""
         path_to_file = Path(__file__).parent / "data" / "endless.cpp"
         cmd_build = "c++ -o endless -O0 {path}".format(path=str(path_to_file))
-        cmd_result = tools.run_command(cmd_build)
-        timout = 1
+        timeout = 1.0
+        cmd_result = tools.run_command(cmd_build, timeout=timeout)
         self.assertTrue(cmd_result.succeeded())
         start = timer()
-        cmd_result = tools.run_command("./endless", timeout=timout)
+        cmd_result = tools.run_command("./endless", timeout=timeout)
         self.assertFalse(cmd_result.succeeded())
         self.assertLess(timer() - start, 5)
         self.assertEqual(
             cmd_result.stderr,
-            "Timeout: command './endless' ran longer than {} seconds".format(timout),
+            "Timeout: command './endless' ran longer than {} seconds".format(timeout),
         )

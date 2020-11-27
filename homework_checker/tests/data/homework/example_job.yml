@@ -64,7 +64,7 @@ homeworks:
           # Should fail as the binary returns a string
           - name: Wrong output format
             expected_output: 4
-      - name: Simple task
+      - name: While loop task
         language: cpp
         folder: task_2
         build_type: simple

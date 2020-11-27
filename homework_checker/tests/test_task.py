@@ -168,7 +168,7 @@ class TestTask(unittest.TestCase):
             homework_index=1, task_index=1
         )
         self.assertEqual(homework_name, "Homework where things go wrong")
-        self.assertEqual(task.name, "Simple task")
+        self.assertEqual(task.name, "While loop task")
         results = task.check()
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 1

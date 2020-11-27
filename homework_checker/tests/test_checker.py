@@ -6,7 +6,6 @@ import unittest
 
 from homework_checker.checker import Checker
 from homework_checker import tools
-from homework_checker import tasks
 
 
 class TestChecker(unittest.TestCase):
@@ -25,55 +24,16 @@ class TestChecker(unittest.TestCase):
         checker = Checker(path_to_job)
         results = checker.check_all_homeworks()
         self.assertEqual(len(results), 3)
-        self.assertEqual(len(results["Homework 1"]), 4)
-        self.assertEqual(len(results["Homework 1"]["Task 1"]), 3)
-        self.assertEqual(len(results["Homework 2"]), 4)
-        self.assertEqual(results["Homework 1"]["Task 1"]["Test 1"].stderr, "")
-        self.assertTrue(results["Homework 1"]["Task 1"]["Test 1"].succeeded())
-        self.assertTrue(results["Homework 1"]["Task 1"]["Test 2"].succeeded())
+        self.assertNotIn("Non existing homework", results)
 
-        self.assertEqual(len(results["Homework 1"]["Task 2"]), 1)
-        self.assertNotIn("Test 1", results["Homework 1"]["Task 2"])
-        self.assertIn(tasks.BUILD_SUCCESS_TAG, results["Homework 1"]["Task 2"])
+        self.assertIn("Homework where things go wrong", results)
+        self.assertIn(tools.EXPIRED_TAG, results["Homework where things go wrong"])
 
-        self.assertTrue(results["Homework 1"]["Task 3"]["Test 1"].succeeded())
-        self.assertFalse(results["Homework 1"]["Task 3"]["Test 2"].succeeded())
-
-        self.assertIn(tasks.STYLE_ERROR_TAG, results["Homework 1"]["Task 4"])
-        self.assertTrue(results["Homework 1"]["Task 4"]["Test 1"].succeeded())
-        self.assertFalse(results["Homework 1"]["Task 4"]["Test 2"].succeeded())
-
-        self.assertIn(tools.EXPIRED_TAG, results["Homework 2"])
-        self.assertIsNotNone(results["Homework 2"]["Task 2"]["Test 1"])
-        self.assertFalse(results["Homework 2"]["Task 1"]["Test 1"].succeeded())
-        self.assertEqual(results["Homework 2"]["Task 2"]["Test 1"].stderr, "")
-
-        self.assertTrue(results["Homework 2"]["Task 2"]["Test 1"].succeeded())
-
-        self.assertFalse(results["Homework 2"]["Task 3"]["Test 1"].succeeded())
         self.assertEqual(
-            results["Homework 2"]["Task 3"]["Test 1"].stderr,
-            "Timeout: command './main' ran longer than 20 seconds",
+            len(results["Homework where things go wrong"]),
+            3,
+            "Wrong results: {}".format(results["Homework where things go wrong"]),
         )
-
-        self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Just build"])
-        self.assertTrue(results["Homework 3"]["Google Tests"]["Just build"].succeeded())
-        self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Inject pass"])
-        self.assertEqual(
-            results["Homework 3"]["Google Tests"]["Inject pass"].stderr, ""
-        )
-        self.assertTrue(
-            results["Homework 3"]["Google Tests"]["Inject pass"].succeeded()
-        )
-        self.assertIsNotNone(results["Homework 3"]["Google Tests"]["Inject fail"])
-        self.assertEqual(
-            results["Homework 3"]["Google Tests"]["Inject fail"].stderr,
-            "Errors while running CTest\n",
-        )
-        self.assertFalse(
-            results["Homework 3"]["Google Tests"]["Inject fail"].succeeded()
-        )
-
-        self.assertTrue(
-            results["Homework 3"]["Bash with many folders"]["ls"].succeeded()
-        )
+        self.assertIn("Return number task", results["Homework where things go wrong"])
+        self.assertIn("While loop task", results["Homework where things go wrong"])
+        self.assertNotIn("Non existing task", results["Homework where things go wrong"])
