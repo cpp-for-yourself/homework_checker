@@ -49,7 +49,7 @@ class Checker:
             )
             if not task:
                 continue
-            results[task.name] = task.check_all_tests()
+            results[task.name] = task.check()
         return results
 
     def check_all_homeworks(self: "Checker") -> Dict[str, HomeworkResultDict]:

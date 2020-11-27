@@ -9,16 +9,17 @@ homeworks:
         language: Any of ['cpp', 'bash']
         name: String value
         ~[optional]~ binary_name: String value
+        ~[optional]~ build_timeout: Float value
         ~[optional]~ build_type: Any of ['cmake', 'simple']
         ~[optional]~ compiler_flags: String value
-        ~[optional]~ inject_folders:
-          - String value
         ~[optional]~ output_type: Any of ['string', 'number']
         ~[optional]~ pipe_through: String value
         ~[optional]~ tests:
           - name: String value
             ~[optional]~ expected_output: Any of ['String value', 'Float value', 'Int value']
             ~[optional]~ inject_folders:
-              - String value
+              - destination: String value
+                source: String value
             ~[optional]~ input_args: String value
             ~[optional]~ run_google_tests: Boolean value
+            ~[optional]~ timeout: Float value

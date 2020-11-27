@@ -11,6 +11,8 @@ import subprocess
 import logging
 import datetime
 import signal
+import shutil
+import hashlib
 
 from .schema_tags import OutputTags
 
@@ -24,11 +26,46 @@ EXPIRED_TAG = "expired"
 log = logging.getLogger("GHC")
 
 
-def get_temp_dir() -> Path:
-    """Create a temporary folder if needed and return it."""
-    tempdir = Path(tempfile.gettempdir(), PKG_NAME)
-    tempdir.mkdir(parents=True, exist_ok=True)
-    return tempdir
+def get_unique_str(seed: str) -> str:
+    """Generate md5 unique sting hash given init_string."""
+    return hashlib.md5(seed.encode("utf-8")).hexdigest()
+
+
+class TempDirCopy:
+    """docstring for TempDirCopy"""
+
+    def __init__(self: TempDirCopy, source_folder: Path, prefix: Optional[str] = None):
+        if prefix:
+            unique_temp_folder_name = "{prefix}_{name}_{unique_hash}".format(
+                prefix=prefix,
+                name=source_folder.name,
+                unique_hash=get_unique_str(str(source_folder)),
+            )
+        else:
+            unique_temp_folder_name = "{name}_{unique_hash}".format(
+                name=source_folder.name,
+                unique_hash=get_unique_str(str(source_folder)),
+            )
+        self.__source_folder = source_folder
+        self.__temporary_folder = (
+            Path(tempfile.gettempdir()) / PKG_NAME / unique_temp_folder_name
+        )
+
+    def __enter__(self: TempDirCopy) -> Path:
+        if self.__temporary_folder.exists():
+            raise Exception("Cannot create a temporary folder as it already exists.")
+        self.__temporary_folder.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copytree(
+                self.__source_folder, self.__temporary_folder, dirs_exist_ok=True
+            )
+        except Exception as exception:
+            shutil.rmtree(self.__temporary_folder)
+            raise exception
+        return self.__temporary_folder
+
+    def __exit__(self: TempDirCopy, *exc_info: Any):
+        shutil.rmtree(self.__temporary_folder)
 
 
 def expand_if_needed(input_path: Path) -> Path:
@@ -46,7 +83,7 @@ def expand_if_needed(input_path: Path) -> Path:
 
 
 def convert_to(
-    output_type: int, value: Any
+    output_type: str, value: Any
 ) -> Union[Tuple[Optional[str], str], Tuple[Optional[float], str]]:
     """Convert the value to a specified type."""
     if not value:
@@ -146,10 +183,10 @@ class CmdResult:
 
 def run_command(
     command: Union[List[str], str],
+    timeout: float,
     shell: bool = True,
     cwd: Path = Path.cwd(),
     env: Optional[Mapping[str, Any]] = None,
-    timeout: float = 20,
 ) -> CmdResult:
     """Run a generic command in a subprocess.
 

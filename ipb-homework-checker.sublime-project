@@ -13,5 +13,13 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings":
+	{
+		"python_interpreter": "python3",
+    "mypy": true,
+    "use_pylint": true,
+    "validate_imports": true,
+    "anaconda_linter_phantoms": true
+	}
 }
