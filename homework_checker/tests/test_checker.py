@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import unittest
 
+from pathlib import Path
 from homework_checker.checker import Checker
+from homework_checker.md_writer import MdWriter
 from homework_checker import tools
 
 
@@ -37,3 +39,7 @@ class TestChecker(unittest.TestCase):
         self.assertIn("Return number task", results["Homework where things go wrong"])
         self.assertIn("While loop task", results["Homework where things go wrong"])
         self.assertNotIn("Non existing task", results["Homework where things go wrong"])
+
+        writer = MdWriter()
+        writer.update(results)
+        writer.write_md_file(Path("test.md"))

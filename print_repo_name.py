@@ -2,14 +2,14 @@
 """A script to parse an input git url and get it's wiki counterpart.
 
 Attributes:
-    wiki_repo_mask (str): mask of wiki git repo
+    WIKI_REPO_MASK (str): mask of wiki git repo
 """
 import sys
 
-from .tools import parse_git_url
+from homework_checker.tools import parse_git_url
 
-wiki_repo_mask = "git@{domain}:{user}/{project}.wiki.git"
-repo_mask = "git@{domain}:{user}/{project}.git"
+WIKI_REPO_MASK = "git@{domain}:{user}/{project}.wiki.git"
+REPO_MASK = "git@{domain}:{user}/{project}.git"
 
 
 def main():
@@ -30,15 +30,15 @@ def main():
                 type="code",
             )
         )
-        exit(1)
+        sys.exit(1)
     if len(sys.argv) == 3:
         repo = sys.argv[1]
         domain, user, project = parse_git_url(repo)
         repo_type = sys.argv[2]
         if repo_type == "wiki":
-            print(wiki_repo_mask.format(domain=domain, user=user, project=project))
+            print(WIKI_REPO_MASK.format(domain=domain, user=user, project=project))
         elif repo_type == "code":
-            print(repo_mask.format(domain=domain, user=user, project=project))
+            print(REPO_MASK.format(domain=domain, user=user, project=project))
         else:
             print('ERROR: type "{}" is not "wiki" or "code"'.format(repo_type))
 
