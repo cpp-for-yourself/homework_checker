@@ -25,20 +25,29 @@ jobs:
     - name: Run unit tests
       run: >
         pipenv run python3 -m unittest discover -v homework_checker/tests/
+    - name: Upload result md file
+      uses: actions/upload-artifact@v2
+      with:
+        name: homework_result
+        path: test.md
   report:
     needs: test
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-        with:
-          repository: ${{ github.repository }}.wiki
-          path: wiki
-      - run: |
-          mv test.md wiki/Home.md
-          cd wiki
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-          git commit -m "generated"
-          git push
+    - uses: actions/checkout@v2
+      with:
+        repository: ${{ github.repository }}.wiki
+        path: wiki
+    - name: Download result md file
+      uses: actions/download-artifact@v2
+      with:
+        name: homework_result
+    - run: |
+        mv test.md wiki/Home.md
+        cd wiki
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "generated"
+        git push
 
