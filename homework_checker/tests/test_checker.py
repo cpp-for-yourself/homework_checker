@@ -42,4 +42,4 @@ class TestChecker(unittest.TestCase):
 
         writer = MdWriter()
         writer.update(results)
-        writer.write_md_file(Path("test.md"))
+        writer.write_md_file(Path("results.md"))

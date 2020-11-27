@@ -29,8 +29,8 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: homework_result
-        path: test.md
-  report:
+        path: results.md
+  upload_to_wiki:
     needs: test
     runs-on: ubuntu-20.04
     steps:
@@ -43,7 +43,7 @@ jobs:
       with:
         name: homework_result
     - run: |
-        mv test.md wiki/Home.md
+        mv results.md wiki/Home.md
         cd wiki
         git config user.name github-actions
         git config user.email github-actions@github.com
