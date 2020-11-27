@@ -12,14 +12,14 @@ jobs:
         path: wiki
     - run: |
         cd wiki
-        printf '%s\n%s\n%s\n' "## Test is running" "![](progress.gif)" "$(cat Home.md)" > Home.md
+        printf '%s\n%s\n' "## Tests are running! Please wait!" "![](progress.gif)" > Home.md
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git commit -m "generated"
+        git commit --allow-empty -m "Add progress bar"
         git push
 
-  test:
+  run_tests:
     needs: upload_progress_bar_to_wiki
     runs-on: ubuntu-20.04
     steps:
@@ -48,8 +48,8 @@ jobs:
         name: homework_result
         path: results.md
 
-  upload_to_wiki:
-    needs: test
+  upload_results_to_wiki:
+    needs: run_tests
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -66,6 +66,6 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git commit -m "generated"
+        git commit -m "Update results"
         git push
 
