@@ -32,6 +32,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: git@github.com:${{ github.repository }}.wiki.git
+          path: wiki
       - run: |
           date > generated.md
           git config user.name github-actions
