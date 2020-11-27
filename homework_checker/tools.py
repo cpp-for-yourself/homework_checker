@@ -46,26 +46,26 @@ class TempDirCopy:
                 name=source_folder.name,
                 unique_hash=get_unique_str(str(source_folder)),
             )
+        self.__source_folder = source_folder
         self.__temporary_folder = (
             Path(tempfile.gettempdir()) / PKG_NAME / unique_temp_folder_name
         )
 
     def __enter__(self: TempDirCopy) -> Path:
-        assert (
-            not self.__temporary_folder.exists()
-        ), "Cannot create a temporary folder as it already exists."
+        if self.__temporary_folder.exists():
+            raise Exception("Cannot create a temporary folder as it already exists.")
         self.__temporary_folder.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.copytree(
+                self.__source_folder, self.__temporary_folder, dirs_exist_ok=True
+            )
+        except Exception as exception:
+            shutil.rmtree(self.__temporary_folder)
+            raise exception
         return self.__temporary_folder
 
     def __exit__(self: TempDirCopy, *exc_info: Any):
         shutil.rmtree(self.__temporary_folder)
-
-
-def get_temp_dir() -> Path:
-    """Create a temporary folder if needed and return it."""
-    tempdir = Path(tempfile.gettempdir(), PKG_NAME)
-    tempdir.mkdir(parents=True, exist_ok=True)
-    return tempdir
 
 
 def expand_if_needed(input_path: Path) -> Path:
@@ -83,7 +83,7 @@ def expand_if_needed(input_path: Path) -> Path:
 
 
 def convert_to(
-    output_type: int, value: Any
+    output_type: str, value: Any
 ) -> Union[Tuple[Optional[str], str], Tuple[Optional[float], str]]:
     """Convert the value to a specified type."""
     if not value:

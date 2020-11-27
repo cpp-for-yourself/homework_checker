@@ -1,91 +1,86 @@
 ---
 folder: homework_checker/tests/data/homework
 homeworks:
-  - name: "Homework 1"
+  - name: "Sample homework"
     folder: "homework_1"
     tasks:
-      - name: Task 1          # This is a struct for Task 1.
+      - name: Simple cpp tasks          # This is a struct for Task 1.
         language: cpp         # Type of the Task.
         folder: task_1        # Name of the folder containing the Task.
         output_type: string   # We expect a string as an output.
         binary_name: main
         tests:                # An Task can have multiple tests.
-          - name: Test 1
+          - name: String output test
             expected_output: > # this wraps into a long string, no line breaks.
               This is a long test output that we expect to be produced by the
               code. We will compare the ouput to this EXACTLY.
-          - name: Test 2
+          - name: Input output test
             input_args: Some string
             expected_output: >
               Some string output
-      - name: Task 2  # This one should not build, so no need for tests
+          - name: Wrong output fail
+            expected_output: >
+              Unexpected output.
+      - name: Build failure task  # This one should not build, no need for tests
         language: cpp
         folder: task_2
         output_type: string
-      - name: Task 3
+      - name: CMake build arithmetics task
         language: cpp
         folder: task_3
         output_type: number
         binary_name: sum_numbers
         tests:
-          - name: Test 1
+          - name: Test integer arithmetics
             input_args: 2 2
             expected_output: 4
-          - name: Test 2  # This test should fail.
+          # This test should fail as we have only implemented int arithmetics.
+          - name: Test float arithmetics
             input_args: 2.15 5
             expected_output: 7.15
-      - name: Task 4
-        language: cpp
+      - name: Bash task
+        language: bash
         folder: task_4
-        build_type: simple
-        output_type: number
+        binary_name: test_me
         tests:
-          - name: Test 1
-            input_args: 2 2
-            expected_output: 4
-          - name: Test 2  # This test should fail.
-            input_args: 2.15 5
-            expected_output: 7.15
+          - name: Test output
+            expected_output: |  # This maintains whitespaces.
+              Hello World!
+              Another line
+              test_me.sh
+          - name: Test wrong output
+            expected_output: Different output that doesn't match generated one
 
-  - name: "Homework 2"
+  - name: "Homework where things go wrong"
     folder: "homework_2"
     submit_by: "2018-04-18 00:00:00"
     tasks:
-      - name: Task 1
+      - name: Return number task
         language: cpp
         folder: task_1
         build_type: simple
         output_type: number
         tests:
-          - name: Test 1  # Should fail as the binary returns a string
+          # Should fail as the binary returns a string
+          - name: Wrong output format
             expected_output: 4
-      - name: Task 2
-        language: bash
-        folder: task_2
-        binary_name: test_me
-        tests:
-          - name: Test 1
-            expected_output: |  # This maintains whitespaces.
-              Hello World!
-              Another line
-              test_me.sh
-      - name: Task 3
+      - name: Simple task
         language: cpp
-        folder: task_3
+        folder: task_2
         build_type: simple
         tests:
-          - name: Test 1  # Should fail because of the timeout.
+          - name: Test timeout  # Should fail because of the timeout.
             expected_output: "irrelevant"
-      - name: Task 4  # Non existing Task
+      - name: Non existing task  # Non existing Task
         language: cpp
-        folder: task_4
+        folder: task_3
         build_type: simple
         output_type: number
         tests:
           - name: Test 1
             expected_output: 4
 
-  - name: "Homework 3"
+  - name: "Homework with injections"
     folder: "homework_3"
     tasks:
       - name: Google Tests
@@ -97,7 +92,7 @@ homeworks:
           - name: Inject pass
             run_google_tests: True
             inject_folders:
-              - source: solutions/pass/tests  # Relative to solutions folder
+              - source: solutions/pass/tests  # Relative to job folder
                 destination: tests  # Relative to the code source folder
           - name: Inject fail
             run_google_tests: True
@@ -120,7 +115,7 @@ homeworks:
               fail
               ls_me.sh
 
-  - name: "Homework 4"  # Non existing homework
+  - name: "Non existing homework"  # Non existing homework
     folder: "homework_4"
     tasks:
       - name: Irrelevant

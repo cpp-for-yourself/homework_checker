@@ -5,7 +5,7 @@ import logging
 import abc
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
-from shutil import copytree, move, rmtree
+from shutil import copytree, rmtree
 
 from . import tools
 from .schema_tags import Tags, LangTags, BuildTags
@@ -32,11 +32,21 @@ class Task:
     ResultDictType = Dict[str, tools.CmdResult]
 
     class Injection:
-        """docstring for Injection"""
+        """A small class that encapsulates an injection source and destination."""
 
         def __init__(self: Task.Injection, source: Path, destination: Path):
-            self.source = source
-            self.destination = destination
+            self._source = source
+            self._destination = destination
+
+        @property
+        def source(self) -> Path:
+            """Get the source folder."""
+            return self._source
+
+        @property
+        def destination(self) -> Path:
+            """Get the destination folder."""
+            return self._destination
 
     @staticmethod
     def from_yaml_node(
@@ -60,7 +70,7 @@ class Task:
     ):
         """Initialize a generic Task."""
         self.name = task_node[Tags.NAME_TAG]
-        self._job_yaml_folder = job_file.parent
+        self._job_root_folder = job_file.parent
         self._output_type = task_node[Tags.OUTPUT_TYPE_TAG]
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
@@ -69,7 +79,6 @@ class Task:
             self._test_nodes = task_node[Tags.TESTS_TAG]
         else:
             self._test_nodes = []  # Sometimes we don't have tests.
-        self._task_node = task_node
 
     def check(self: Task) -> Task.ResultDictType:
         """Iterate over the tests and check them."""
@@ -85,27 +94,27 @@ class Task:
                 # There is no need to rebuild the code. We can just run our tests.
                 test_result = self._run_test(test_node, executable_folder)
                 results[test_node[Tags.NAME_TAG]] = test_result
-                return {}
-            # There are folders to inject, so we will have to rebuild.
+                return results
+            # There are folders to inject, so we will have to rebuild with the newly
+            # injected folders. We do it in a new temp folder.
             with tools.TempDirCopy(
-                source_folder=self._student_task_folder, prefix="injected"
-            ) as new_code_folder:
+                source_folder=self._student_task_folder, prefix="build_injected"
+            ) as code_folder:
                 folders_to_inject = self.__get_folders_to_inject(
-                    node=test_node, destination_root=new_code_folder
+                    node=test_node, destination_root=code_folder
                 )
                 Task.__inject_folders(folders_to_inject)
-                build_result, build_folder = self._build_if_needed(new_code_folder)
-                assert (
-                    build_result.succeeded()
-                ), "Build with inserted folders must ALWAYS succeed!"
+                build_result, build_folder = self._build_if_needed(code_folder)
+                if build_result and not build_result.succeeded():
+                    raise Exception("Build with inserted folders must ALWAYS succeed!")
                 test_result = self._run_test(
                     test_node=test_node, executable_folder=build_folder
                 )
                 results[test_node[Tags.NAME_TAG]] = test_result
             return results
 
-        # Build the source if this is needed.
         with tools.TempDirCopy(self._student_task_folder) as code_folder:
+            # Build the source if this is needed.
             build_result, build_folder = self._build_if_needed(code_folder)
             if build_result:
                 results[BUILD_SUCCESS_TAG] = build_result
@@ -131,7 +140,7 @@ class Task:
             # Inject all needed folders.
             for injection in node[Tags.INJECT_FOLDER_TAG]:
                 source_folder = (
-                    self._job_yaml_folder / injection[Tags.INJECT_SOURCE_TAG]
+                    self._job_root_folder / injection[Tags.INJECT_SOURCE_TAG]
                 )
                 destination_folder = (
                     destination_root / injection[Tags.INJECT_DESTINATION_TAG]
@@ -160,11 +169,6 @@ class Task:
     @abc.abstractmethod
     def _code_style_errors(self: Task):
         return None
-
-    @property
-    def student_task_folder(self: Task):
-        """Get the folder with the student's task."""
-        return self._student_task_folder
 
 
 class CppTask(Task):

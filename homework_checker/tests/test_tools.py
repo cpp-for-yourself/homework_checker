@@ -19,6 +19,25 @@ class TestTools(unittest.TestCase):
         if tools.PROJECT_ROOT_FOLDER.exists():
             self.assertEqual(tools.PROJECT_ROOT_FOLDER.name, "homework_checker")
 
+    def test_temp_directory_copy(self: TestTools):
+        """Test that we can create and remove a temp folder."""
+        folder_name = tools.PROJECT_ROOT_FOLDER
+        old_temp_folder = None
+
+        with tools.TempDirCopy(source_folder=folder_name) as tempdir:
+            self.assertIn(tools.get_unique_str(str(folder_name)), str(tempdir))
+            self.assertTrue(tempdir.exists())
+            self.assertTrue((tempdir / tools.PKG_NAME / "tests").exists())
+            with self.assertRaises(Exception):
+                with tools.TempDirCopy(folder_name):
+                    pass
+            old_temp_folder = tempdir
+        self.assertFalse(old_temp_folder.exists())
+
+        prefix = "blah"
+        with tools.TempDirCopy(source_folder=folder_name, prefix=prefix) as tempdir:
+            self.assertIn(prefix, str(tempdir))
+
     def test_convert_to(self: TestTools):
         """Test conversion to expected type."""
         output, error = tools.convert_to(OutputTags.NUMBER, "value")
