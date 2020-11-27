@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: git@github.com:${{ github.repository }}.wiki.git
+          repository: ${{ github.repository }}.wiki
           path: wiki
       - run: |
           date > generated.md
