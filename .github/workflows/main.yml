@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   upload_progress_bar_to_wiki:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
@@ -21,7 +21,7 @@ jobs:
 
   run_tests:
     needs: upload_progress_bar_to_wiki
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -50,7 +50,7 @@ jobs:
 
   upload_results_to_wiki:
     needs: run_tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
