@@ -2,6 +2,7 @@
 """Script to check this homework."""
 import argparse
 import logging
+from pathlib import Path
 
 from homework_checker.checker import Checker
 from homework_checker.md_writer import MdWriter
@@ -33,7 +34,7 @@ def main():
         log.debug("Enable DEBUG logging.")
     # Read the job file.
     log.debug('Reading from file "%s"', args.input)
-    checker = Checker(args.input)
+    checker = Checker(Path(args.input))
     results = checker.check_all_homeworks()
     md_writer = MdWriter()
     md_writer.update(results)
