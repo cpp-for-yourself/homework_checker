@@ -22,6 +22,7 @@ DATE_PATTERN = "%Y-%m-%d %H:%M:%S"
 MAX_DATE_STR = datetime.datetime.max.strftime(DATE_PATTERN)
 
 EXPIRED_TAG = "expired"
+NUMBER_SPLIT_TAG = "____"
 
 log = logging.getLogger("GHC")
 
@@ -30,6 +31,16 @@ def get_unique_str(seed: str) -> str:
     """Generate md5 unique sting hash given init_string."""
     return hashlib.md5(seed.encode("utf-8")).hexdigest()
 
+
+def add_number_to_name(number: int, name: str) -> str:
+    """Add a number before a string."""
+    return str(number) + NUMBER_SPLIT_TAG + name
+
+def remove_number_from_name(name: str) -> str:
+    """Add a number before a string."""
+    if NUMBER_SPLIT_TAG not in name:
+        return name
+    return name.split(NUMBER_SPLIT_TAG)[1]
 
 class TempDirCopy:
     """docstring for TempDirCopy"""

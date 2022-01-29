@@ -18,8 +18,8 @@ OUTPUT_MISMATCH_MESSAGE = """Given input: '{input}'
 Your output '{actual}'
 Expected output: '{expected}'"""
 
-BUILD_SUCCESS_TAG = "0. Build succeeded"
-STYLE_ERROR_TAG = "0. Style errors"
+BUILD_SUCCESS_TAG = "Build succeeded"
+STYLE_ERROR_TAG = "Style errors"
 
 TOTAL_ERRORS_FOUND_TAG = "Total errors found"
 
@@ -80,6 +80,12 @@ class Task:
             self._test_nodes = task_node[Tags.TESTS_TAG]
         else:
             self._test_nodes = []  # Sometimes we don't have tests.
+        self.__test_counter = 0
+
+    def __with_number_prefix(self: Task, test_name: str) -> str:
+        """Get the test name with number."""
+        self.__test_counter += 1
+        return tools.add_number_to_name(self.__test_counter, test_name)
 
     def check(self: Task) -> Task.ResultDictType:
         """Iterate over the tests and check them."""
@@ -94,7 +100,7 @@ class Task:
             if Tags.INJECT_FOLDER_TAG not in test_node:
                 # There is no need to rebuild the code. We can just run our tests.
                 test_result = self._run_test(test_node, executable_folder)
-                results[test_node[Tags.NAME_TAG]] = test_result
+                results[self.__with_number_prefix(test_node[Tags.NAME_TAG])] = test_result
                 return results
             # There are folders to inject, so we will have to rebuild with the newly
             # injected folders. We do it in a new temp folder.
@@ -111,14 +117,14 @@ class Task:
                 test_result = self._run_test(
                     test_node=test_node, executable_folder=build_folder
                 )
-                results[test_node[Tags.NAME_TAG]] = test_result
+                results[self.__with_number_prefix(test_node[Tags.NAME_TAG])] = test_result
             return results
 
         with tools.TempDirCopy(self._student_task_folder) as code_folder:
             # Build the source if this is needed.
             build_result, build_folder = self._build_if_needed(code_folder)
             if build_result:
-                results[BUILD_SUCCESS_TAG] = build_result
+                results[self.__with_number_prefix(BUILD_SUCCESS_TAG)] = build_result
                 if not build_result.succeeded():
                     # The build has failed, so no further testing needed.
                     return results
