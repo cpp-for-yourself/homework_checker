@@ -100,7 +100,9 @@ class Task:
             if Tags.INJECT_FOLDER_TAG not in test_node:
                 # There is no need to rebuild the code. We can just run our tests.
                 test_result = self._run_test(test_node, executable_folder)
-                results[self.__with_number_prefix(test_node[Tags.NAME_TAG])] = test_result
+                results[
+                    self.__with_number_prefix(test_node[Tags.NAME_TAG])
+                ] = test_result
                 return results
             # There are folders to inject, so we will have to rebuild with the newly
             # injected folders. We do it in a new temp folder.
@@ -117,7 +119,9 @@ class Task:
                 test_result = self._run_test(
                     test_node=test_node, executable_folder=build_folder
                 )
-                results[self.__with_number_prefix(test_node[Tags.NAME_TAG])] = test_result
+                results[
+                    self.__with_number_prefix(test_node[Tags.NAME_TAG])
+                ] = test_result
             return results
 
         with tools.TempDirCopy(self._student_task_folder) as code_folder:

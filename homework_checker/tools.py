@@ -36,11 +36,13 @@ def add_number_to_name(number: int, name: str) -> str:
     """Add a number before a string."""
     return str(number) + NUMBER_SPLIT_TAG + name
 
+
 def remove_number_from_name(name: str) -> str:
     """Add a number before a string."""
     if NUMBER_SPLIT_TAG not in name:
         return name
     return name.split(NUMBER_SPLIT_TAG)[1]
+
 
 class TempDirCopy:
     """docstring for TempDirCopy"""
