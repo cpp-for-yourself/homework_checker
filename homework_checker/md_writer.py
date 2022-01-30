@@ -11,13 +11,13 @@ TABLE_TEMPLATE = "| {hw_name} | {task_name} | {test_name} | {result_sign} |\n"
 TABLE_SEPARATOR = "|---|---|---|:---:|\n"
 
 ERROR_TEMPLATE = """
-<details><summary><b>{hw_name} : {task_name} : {test_name}</b></summary>
+<details><summary><b>{hw_name} | {task_name} | {test_name}</b></summary>
 
-### {hw_name} : {task_name} : {test_name} : `stderr`
+### {hw_name} | {task_name} | {test_name} | `stderr`
 ```apiblueprint
 {stderr}
 ```
-### {hw_name} : {task_name} : {test_name} : `stdout`
+### {hw_name} | {task_name} | {test_name} | `stdout`
 ```
 {stdout}
 ```
@@ -32,7 +32,7 @@ EXPIRED_TEMPLATE = """
 
 <details><summary><b>{hw_name}</b></summary>
 
-### `{hw_name}:Past Deadline:Errors Hidden`
+### {hw_name} | Past Deadline | Errors Hidden
 
 </details>
 
