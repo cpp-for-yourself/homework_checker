@@ -13,11 +13,12 @@ TABLE_SEPARATOR = "|---|---|---|:---:|\n"
 ERROR_TEMPLATE = """
 <details><summary><b>{hw_name} | {task_name} | {test_name}</b></summary>
 
-### {hw_name} | {task_name} | {test_name} | `stderr`
+**`stderr`**
 ```apiblueprint
 {stderr}
 ```
-### {hw_name} | {task_name} | {test_name} | `stdout`
+
+**`stdout`**
 ```
 {stdout}
 ```
@@ -32,10 +33,11 @@ EXPIRED_TEMPLATE = """
 
 <details><summary><b>{hw_name}</b></summary>
 
-### {hw_name} | Past Deadline | Errors Hidden
+The deadline for this homework is exceeded. Errors hidden.
 
+-------
+ 
 </details>
-
 
 """
 
@@ -97,7 +99,7 @@ class MdWriter:
         md_file_content = "# Test results\n"
         md_file_content += self._md_table
         if self._errors:
-            md_file_content += "\n## Encountered errors\n"
+            md_file_content += "\n# Encountered errors\n"
             md_file_content += self._errors
         md_file_content += SEPARATOR
         md_file_content += FINISHING_NOTE
