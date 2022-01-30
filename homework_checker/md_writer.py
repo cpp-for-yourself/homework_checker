@@ -4,35 +4,48 @@ from pathlib import Path
 
 from .tools import EXPIRED_TAG
 from .tools import CmdResult
+from .tools import remove_number_from_name
 from .checker import HomeworkResultDict
 
 TABLE_TEMPLATE = "| {hw_name} | {task_name} | {test_name} | {result_sign} |\n"
 TABLE_SEPARATOR = "|---|---|---|:---:|\n"
 
-ERROR_TEMPLATE = """### `[{hw_name}][{task_name}][{test_name}]:`
+ERROR_TEMPLATE = """
+<details><summary><b>{hw_name} | {task_name} | {test_name}</b></summary>
 
-*stderr*:
+**`stderr`**
 ```apiblueprint
 {stderr}
 ```
-*stdout*:
+
+**`stdout`**
 ```
 {stdout}
 ```
+
 --------
+
+</details>
+
 """
 
 EXPIRED_TEMPLATE = """
 
-### `[{hw_name}][Past Deadline][Errors Hidden]`
+<details><summary><b>{hw_name}</b></summary>
+
+The deadline for this homework is exceeded. Errors hidden.
+
+-------
+ 
+</details>
 
 """
 
 SEPARATOR = "--------\n"
-FINISHING_NOTE = "With 💙 from homework bot 🤖\n"
+FINISHING_NOTE = "With ❤️ from Homework Bot 🤖\n"
 
-SUCCESS_TAG = "✔"
-FAILED_TAG = "✘"
+SUCCESS_TAG = "✅"
+FAILED_TAG = "❌"
 
 
 class MdWriter:
@@ -52,11 +65,13 @@ class MdWriter:
     def update(self: "MdWriter", hw_results: Dict[str, HomeworkResultDict]):
         """Update the table of completion."""
         for hw_name, hw_dict in sorted(hw_results.items()):
+            hw_name = remove_number_from_name(hw_name)
             need_hw_name = True
             expired = False
             if EXPIRED_TAG in hw_dict:
                 expired = True
             for task_name, ex_dict in sorted(hw_dict.items()):
+                task_name = remove_number_from_name(task_name)
                 if task_name == EXPIRED_TAG:
                     # Maybe there is a better way to handle this, but I don't
                     # want to dig into this right now. We have added the
@@ -64,6 +79,7 @@ class MdWriter:
                     continue
                 need_task_name = True
                 for test_name, test_result in sorted(ex_dict.items()):
+                    test_name = remove_number_from_name(test_name)
                     result_sign = SUCCESS_TAG if test_result.succeeded() else FAILED_TAG
                     extended_hw_name = (
                         hw_name + " `[PAST DEADLINE]`" if expired else hw_name
@@ -83,7 +99,7 @@ class MdWriter:
         md_file_content = "# Test results\n"
         md_file_content += self._md_table
         if self._errors:
-            md_file_content += "\n## Encountered errors\n"
+            md_file_content += "\n# Encountered errors\n"
             md_file_content += self._errors
         md_file_content += SEPARATOR
         md_file_content += FINISHING_NOTE

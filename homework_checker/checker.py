@@ -20,6 +20,7 @@ class Checker:
     """Check homework."""
 
     TESTS_TAG = "tests"
+    NUMBERING_TAG = "____"
 
     def __init__(self: "Checker", job_file_path: Path):
         """Initialize the checker from file."""
@@ -41,7 +42,7 @@ class Checker:
         deadline_datetime = datetime.strptime(deadline_str, tools.DATE_PATTERN)
         if datetime.now() > deadline_datetime:
             results[tools.EXPIRED_TAG] = {}
-        for task_node in homework_node[Tags.TASKS_TAG]:
+        for idx, task_node in enumerate(homework_node[Tags.TASKS_TAG]):
             task = Task.from_yaml_node(
                 task_node=task_node,
                 student_hw_folder=current_folder,
@@ -49,14 +50,14 @@ class Checker:
             )
             if not task:
                 continue
-            results[task.name] = task.check()
+            results[tools.add_number_to_name(idx, task.name)] = task.check()
         return results
 
     def check_all_homeworks(self: "Checker") -> Dict[str, HomeworkResultDict]:
         """Run over all Tasks in all homeworks."""
         results: Dict[str, HomeworkResultDict] = {}
-        for homework_node in self._base_node[Tags.HOMEWORKS_TAG]:
-            hw_name = homework_node[Tags.NAME_TAG]
+        for idx, homework_node in enumerate(self._base_node[Tags.HOMEWORKS_TAG]):
+            hw_name = tools.add_number_to_name(idx, homework_node[Tags.NAME_TAG])
             current_homework_results = self.check_homework(homework_node)
             if current_homework_results:
                 results[hw_name] = current_homework_results

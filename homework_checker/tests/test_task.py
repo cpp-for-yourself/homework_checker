@@ -50,6 +50,14 @@ class TestTask(unittest.TestCase):
             self.fail("Task cannot be None")
         return homework_node[Tags.NAME_TAG], task
 
+    @staticmethod
+    def __sanitize_results(results: dict) -> dict:
+        """Sanitize the outputs of the tasks."""
+        sanitized_results = {}
+        for key, value in results.items():
+            sanitized_results[tools.remove_number_from_name(key)] = value
+        return sanitized_results
+
     def test_check_simple_cpp_io_task(self: "TestTask"):
         """Check that we can build and run cpp code and get some output."""
 
@@ -59,6 +67,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Sample homework")
         self.assertEqual(task.name, "Simple cpp tasks")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 3
         self.assertEqual(
@@ -81,6 +90,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Sample homework")
         self.assertEqual(task.name, "Build failure task")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 0
         self.assertEqual(
@@ -99,6 +109,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Sample homework")
         self.assertEqual(task.name, "CMake build arithmetics task")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 2
         expected_number_of_code_style_outputs = 0
@@ -122,6 +133,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Sample homework")
         self.assertEqual(task.name, "Bash task")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 0
         expected_number_of_test_outputs = 2
         expected_number_of_code_style_outputs = 0
@@ -132,6 +144,7 @@ class TestTask(unittest.TestCase):
             + expected_number_of_code_style_outputs,
             "Wrong results: {}".format(results),
         )
+        print(results)
         self.assertTrue(results["Test output"].succeeded())
         self.assertFalse(results["Test wrong output"].succeeded())
 
@@ -144,6 +157,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Homework where things go wrong")
         self.assertEqual(task.name, "Return number task")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 1
         expected_number_of_code_style_outputs = 0
@@ -170,6 +184,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Homework where things go wrong")
         self.assertEqual(task.name, "While loop task")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 1
         expected_number_of_code_style_outputs = 0
@@ -198,6 +213,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Homework with injections")
         self.assertEqual(task.name, "Google Tests")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 3
         expected_number_of_code_style_outputs = 0
@@ -222,6 +238,7 @@ class TestTask(unittest.TestCase):
         self.assertEqual(homework_name, "Homework with injections")
         self.assertEqual(task.name, "Bash with many folders")
         results = task.check()
+        results = TestTask.__sanitize_results(results)
         expected_number_of_build_outputs = 0
         expected_number_of_test_outputs = 1
         expected_number_of_code_style_outputs = 0
