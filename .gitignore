@@ -24,3 +24,6 @@ build/
 /coverage.xml
 
 !Pipfile
+dist/
+/result.md
+/results.md

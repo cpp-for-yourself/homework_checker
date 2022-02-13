@@ -17,7 +17,7 @@ import hashlib
 from .schema_tags import OutputTags
 
 PKG_NAME = "homework_checker"
-PROJECT_ROOT_FOLDER = Path(__file__).parent.parent
+PROJECT_ROOT_FOLDER = Path(__file__).parent.parent.parent
 DATE_PATTERN = "%Y-%m-%d %H:%M:%S"
 MAX_DATE_STR = datetime.datetime.max.strftime(DATE_PATTERN)
 
@@ -84,15 +84,15 @@ class TempDirCopy:
 def expand_if_needed(input_path: Path) -> Path:
     """Expand the path if it is not absolute."""
     if input_path.is_absolute():
-        return Path(input_path)
+        return input_path
     new_path = input_path.expanduser()
     if new_path.is_absolute():
         # This path needed user expansion. Now that the user home directory is
         # expanded this is a full absolute path.
         return new_path
     # The user could not be expanded, so we assume it is just another relative
-    # path to the project directory. Mostly used for testing purposes here.
-    return Path(PROJECT_ROOT_FOLDER, new_path)
+    # path to the current working directory.
+    return Path.cwd() / new_path
 
 
 def convert_to(

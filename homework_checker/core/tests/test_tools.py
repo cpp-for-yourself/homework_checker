@@ -6,8 +6,8 @@ import unittest
 
 from time import monotonic as timer
 from pathlib import Path
-from homework_checker import tools
-from homework_checker.schema_tags import OutputTags
+from homework_checker.core import tools
+from homework_checker.core.schema_tags import OutputTags
 
 
 class TestTools(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestTools(unittest.TestCase):
         with tools.TempDirCopy(source_folder=folder_name) as tempdir:
             self.assertIn(tools.get_unique_str(str(folder_name)), str(tempdir))
             self.assertTrue(tempdir.exists())
-            self.assertTrue((tempdir / tools.PKG_NAME / "tests").exists())
+            self.assertTrue((tempdir / tools.PKG_NAME / "core" / "tests").exists())
             with self.assertRaises(Exception):
                 with tools.TempDirCopy(folder_name):
                     pass

@@ -5,10 +5,14 @@ import unittest
 from pathlib import Path
 from typing import Tuple
 
-from homework_checker.tasks import Task, BUILD_SUCCESS_TAG, STYLE_ERROR_TAG
-from homework_checker.schema_tags import Tags
-from homework_checker.schema_manager import SchemaManager
-from homework_checker import tools
+from homework_checker.core.tasks import (
+    Task,
+    BUILD_SUCCESS_TAG,
+    STYLE_ERROR_TAG,
+)
+from homework_checker.core.schema_tags import Tags
+from homework_checker.core.schema_manager import SchemaManager
+from homework_checker.core import tools
 
 
 class TestTask(unittest.TestCase):
@@ -20,6 +24,7 @@ class TestTask(unittest.TestCase):
         self.job_file_path = (
             tools.PROJECT_ROOT_FOLDER
             / "homework_checker"
+            / "core"
             / "tests"
             / "data"
             / "homework"

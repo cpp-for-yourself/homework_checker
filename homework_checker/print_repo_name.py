@@ -3,10 +3,14 @@
 
 Attributes:
     WIKI_REPO_MASK (str): mask of wiki git repo
+    REPO_MASK (str): mask of the git repo
 """
 import sys
 
-from homework_checker.tools import parse_git_url
+if __name__ == "__main__":
+    from core.tools import parse_git_url
+else:
+    from homework_checker.core.tools import parse_git_url
 
 WIKI_REPO_MASK = "git@{domain}:{user}/{project}.wiki.git"
 REPO_MASK = "git@{domain}:{user}/{project}.git"

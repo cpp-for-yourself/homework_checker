@@ -30,11 +30,13 @@ class Checker:
         self._checked_code_folder = tools.expand_if_needed(
             Path(self._base_node[Tags.FOLDER_TAG])
         )
+        log.debug("self._checked_code_folder: %s", self._checked_code_folder)
 
     def check_homework(self: "Checker", homework_node: dict) -> HomeworkResultDict:
         """Run over all Tasks in a single homework."""
         results: HomeworkResultDict = {}
         current_folder = Path(self._checked_code_folder, homework_node[Tags.FOLDER_TAG])
+        log.debug("current_folder: %s", current_folder)
         if not current_folder.exists():
             log.warning("Folder '%s' does not exist. Skiping.", current_folder)
             return results

@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 from typing import Dict
 
-from homework_checker.checker import Checker
-from homework_checker.md_writer import MdWriter
-from homework_checker import tools
+from homework_checker.core.checker import Checker
+from homework_checker.core.md_writer import MdWriter
+from homework_checker.core import tools
 
 
 class TestChecker(unittest.TestCase):
@@ -30,6 +30,7 @@ class TestChecker(unittest.TestCase):
         path_to_job = (
             tools.PROJECT_ROOT_FOLDER
             / "homework_checker"
+            / "core"
             / "tests"
             / "data"
             / "homework"

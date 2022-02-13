@@ -1,5 +1,5 @@
 ---
-folder: homework_checker/tests/data/homework
+folder: homework_checker/core/tests/data/homework
 homeworks:
   - name: "Sample homework"
     folder: "homework_1"

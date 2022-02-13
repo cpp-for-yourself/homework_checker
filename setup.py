@@ -1,4 +1,3 @@
-"""Setup module for catkin_tools_fetch."""
 import os
 import sys
 from stat import ST_MODE
@@ -6,7 +5,7 @@ from distutils import log
 from setuptools import setup
 from setuptools.command.install import install
 
-VERSION_STRING = "0.0.6"
+VERSION_STRING = "1.0.0"
 
 PACKAGE_NAME = "homework_checker"
 
@@ -37,7 +36,7 @@ class PermissiveInstall(install):
                 os.chmod(file, mode)
 
 
-GITHUB_URL = "https://github.com/PRBonn/{}".format(PACKAGE_NAME)
+GITHUB_URL = "https://github.com/niosus/{}".format(PACKAGE_NAME)
 
 setup(
     name=PACKAGE_NAME,
@@ -46,10 +45,10 @@ setup(
     install_requires=INSTALL_REQUIRES,
     setup_requires=["nose>=1.0"],
     author="Igor Bogoslavskyi",
-    author_email="igor.bogoslavskyi@uni-bonn.de",
+    author_email="igor.bogoslavskyi@gmail.com",
     maintainer="Igor Bogoslavskyi",
-    maintainer_email="igor.bogoslavskyi@uni-bonn.de",
-    keywords=["ipb", "homework-checker"],
+    maintainer_email="igor.bogoslavskyi@gmail.com",
+    keywords=["homework-checker"],
     license="Apache 2.0",
     url=GITHUB_URL,
     download_url=GITHUB_URL + "/tarball/" + VERSION_STRING,
@@ -61,6 +60,7 @@ setup(
     ],
     description="""A generic homework checker.""",
     long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     test_suite="tests",
     entry_points={
         "console_scripts": [
