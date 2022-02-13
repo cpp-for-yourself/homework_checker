@@ -40,7 +40,6 @@ GITHUB_URL = "https://github.com/niosus/{}".format(PACKAGE_NAME)
 
 setup(
     name=PACKAGE_NAME,
-    packages=[PACKAGE_NAME],
     version=VERSION_STRING,
     install_requires=INSTALL_REQUIRES,
     setup_requires=["nose>=1.0"],
@@ -62,6 +61,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     test_suite="tests",
+    packages=setuptools.find_packages(),
     entry_points={
         "console_scripts": [
             "check_homework = homework_checker.check_homework:main",
