@@ -3,6 +3,7 @@ import sys
 from stat import ST_MODE
 from distutils import log
 from setuptools import setup
+from setuptools import find_packages
 from setuptools.command.install import install
 
 VERSION_STRING = "1.0.2"
@@ -61,7 +62,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
     test_suite="tests",
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     entry_points={
         "console_scripts": [
             "check_homework = homework_checker.check_homework:main",
