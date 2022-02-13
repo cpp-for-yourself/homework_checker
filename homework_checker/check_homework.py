@@ -4,14 +4,9 @@ import argparse
 import logging
 from pathlib import Path
 
-if __name__ == "__main__":
-    from core.checker import Checker
-    from core.md_writer import MdWriter
-    from core.tools import expand_if_needed
-else:
-    from homework_checker.core.checker import Checker
-    from homework_checker.core.md_writer import MdWriter
-    from homework_checker.core.tools import expand_if_needed
+from homework_checker.core.checker import Checker
+from homework_checker.core.md_writer import MdWriter
+from homework_checker.core.tools import expand_if_needed
 
 logging.basicConfig()
 log = logging.getLogger("GHC")

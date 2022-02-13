@@ -7,10 +7,7 @@ Attributes:
 """
 import sys
 
-if __name__ == "__main__":
-    from core.tools import parse_git_url
-else:
-    from homework_checker.core.tools import parse_git_url
+from homework_checker.core.tools import parse_git_url
 
 WIKI_REPO_MASK = "git@{domain}:{user}/{project}.wiki.git"
 REPO_MASK = "git@{domain}:{user}/{project}.git"
