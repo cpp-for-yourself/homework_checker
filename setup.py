@@ -5,7 +5,7 @@ from distutils import log
 from setuptools import setup
 from setuptools.command.install import install
 
-VERSION_STRING = "0.1.3"
+VERSION_STRING = "1.0.0"
 
 PACKAGE_NAME = "homework_checker"
 
@@ -60,6 +60,7 @@ setup(
     ],
     description="""A generic homework checker.""",
     long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     test_suite="tests",
     entry_points={
         "console_scripts": [
