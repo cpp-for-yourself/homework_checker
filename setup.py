@@ -5,7 +5,7 @@ from distutils import log
 from setuptools import setup
 from setuptools.command.install import install
 
-VERSION_STRING = "1.0.0"
+VERSION_STRING = "1.0.1"
 
 PACKAGE_NAME = "homework_checker"
 
