@@ -4,9 +4,14 @@ import argparse
 import logging
 from pathlib import Path
 
-from homework_checker.checker import Checker
-from homework_checker.md_writer import MdWriter
-
+if __name__ == "__main__":
+    from core.checker import Checker
+    from core.md_writer import MdWriter
+    from core.tools import expand_if_needed
+else:
+    from homework_checker.core.checker import Checker
+    from homework_checker.core.md_writer import MdWriter
+    from homework_checker.core.tools import expand_if_needed
 
 logging.basicConfig()
 log = logging.getLogger("GHC")
@@ -32,15 +37,15 @@ def main():
     if args.verbose:
         log.setLevel(logging.DEBUG)
         log.debug("Enable DEBUG logging.")
-    # Read the job file.
-    log.debug('Reading from file "%s"', args.input)
-    checker = Checker(Path(args.input))
+    input_file = expand_if_needed(Path(args.input))
+    log.debug('Reading from file "%s"', input_file)
+    checker = Checker(input_file)
     results = checker.check_all_homeworks()
     md_writer = MdWriter()
     md_writer.update(results)
-    # Write the resulting markdown file.
-    log.debug('Writing to file "%s"', args.output)
-    md_writer.write_md_file(args.output)
+    output_file = expand_if_needed(Path(args.output))
+    log.debug('Writing to file "%s"', output_file)
+    md_writer.write_md_file(output_file)
 
 
 if __name__ == "__main__":
