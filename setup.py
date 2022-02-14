@@ -6,7 +6,7 @@ from setuptools import setup
 from setuptools import find_packages
 from setuptools.command.install import install
 
-VERSION_STRING = "1.0.2"
+VERSION_STRING = "1.0.3"
 
 PACKAGE_NAME = "homework_checker"
 
@@ -37,7 +37,7 @@ class PermissiveInstall(install):
                 os.chmod(file, mode)
 
 
-GITHUB_URL = "https://github.com/niosus/{}".format(PACKAGE_NAME)
+GITHUB_URL = "https://github.com/cpp-for-yourself/{}".format(PACKAGE_NAME)
 
 setup(
     name=PACKAGE_NAME,
