@@ -42,6 +42,10 @@ class SchemaManager:
             Optional(Tags.TIMEOUT_TAG, default=60): float,
         }
 
+        style_check_schema = {
+            Tags.NAME_TAG: str,
+        }
+
         task_schema = {
             Tags.NAME_TAG: str,
             Tags.LANGUAGE_TAG: Or(LangTags.CPP, LangTags.BASH),
@@ -57,6 +61,7 @@ class SchemaManager:
                 BuildTags.CMAKE, BuildTags.SIMPLE
             ),
             Optional(Tags.BUILD_TIMEOUT_TAG, default=60): float,
+            Optional(Tags.STYLE_CHECKERS_TAG): [style_check_schema],
             Optional(Tags.TESTS_TAG): [test_schema],
         }
 

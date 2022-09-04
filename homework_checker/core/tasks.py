@@ -76,6 +76,10 @@ class Task:
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
         self._build_timeout = task_node[Tags.BUILD_TIMEOUT_TAG]
 
+        self._style_checkers = []
+        if Tags.STYLE_CHECKERS_TAG in task_node:
+            self._style_checkers = task_node[Tags.STYLE_CHECKERS_TAG]
+
         self._test_nodes = []
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
@@ -137,9 +141,16 @@ class Task:
                     run_all_tests(test_node=test_node, executable_folder=build_folder)
                 )
 
-        style_errors = self._code_style_errors()
-        if style_errors:
-            results[STYLE_ERROR_TAG] = style_errors
+        if self._style_checkers:
+            for checker in self._style_checkers:
+                checker_name = checker[Tags.NAME_TAG]
+                style_errors = self._code_style_errors(checker_name)
+                if style_errors:
+                    results[
+                        "{tag} {checker}".format(
+                            tag=STYLE_ERROR_TAG, checker=checker_name
+                        )
+                    ] = style_errors
         return results
 
     def __get_folders_to_inject(
@@ -177,7 +188,7 @@ class Task:
         return None, code_folder
 
     @abc.abstractmethod
-    def _code_style_errors(self: Task):
+    def _code_style_errors(self: Task, checker_name: str):
         return None
 
 
@@ -219,8 +230,12 @@ class CppTask(Task):
             code_folder,
         )
 
-    def _code_style_errors(self: CppTask) -> Optional[tools.CmdResult]:
+    def _code_style_errors(
+        self: CppTask, checker_name: str
+    ) -> Optional[tools.CmdResult]:
         """Check if code conforms to Google Style."""
+        if checker_name != "cpplint":
+            return None
         command = (
             "cpplint --counting=detailed "
             + "--filter=-legal,-readability/todo,"
@@ -298,7 +313,7 @@ class BashTask(Task):
     def _build_if_needed(self: BashTask, code_folder: Path):
         return None, code_folder  # There is nothing to build in Bash.
 
-    def _code_style_errors(self: BashTask):
+    def _code_style_errors(self: BashTask, checker_name: str):
         return None
 
     def _run_test(

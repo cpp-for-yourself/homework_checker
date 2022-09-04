@@ -13,6 +13,8 @@ homeworks:
         ~[optional]~ compiler_flags: String value
         ~[optional]~ build_type: Any of ['cmake', 'simple']
         ~[optional]~ output_type: Any of ['string', 'number']
+        ~[optional]~ style_checkers:
+          - name: String value
         ~[optional]~ tests:
           - name: String value
             ~[optional]~ expected_output: Any of ['String value', 'Float value', 'Int value']
