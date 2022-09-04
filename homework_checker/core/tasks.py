@@ -75,7 +75,7 @@ class Task:
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
         self._build_timeout = task_node[Tags.BUILD_TIMEOUT_TAG]
-        
+
         self._test_nodes = []
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
@@ -253,7 +253,7 @@ class CppTask(Task):
         input_pipe_args = None
         if Tags.INPUT_PIPE_TAG in test_node:
             input_pipe_args = test_node[Tags.INPUT_PIPE_TAG]
-        
+
         input_str = ""
         if Tags.INPUT_ARGS_TAG in test_node:
             input_str = test_node[Tags.INPUT_ARGS_TAG]

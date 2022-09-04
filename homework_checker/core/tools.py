@@ -250,7 +250,7 @@ def __run_subprocess(
     str_input: str = None,
     timeout: float = None,
     check: bool = False,
-    **kwargs
+    **kwargs,
 ) -> subprocess.CompletedProcess:
     """Run a command as a subprocess.
 
