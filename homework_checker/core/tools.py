@@ -4,6 +4,7 @@ import os
 import re
 from os import environ
 from subprocess import Popen, TimeoutExpired, CalledProcessError, CompletedProcess
+from sys import stdin
 from typing import Union, List, Optional, Mapping, Any, Tuple
 from pathlib import Path
 import tempfile
@@ -219,6 +220,7 @@ def run_command(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
             shell=shell,
             cwd=str(cwd),
             env=env,
@@ -248,7 +250,7 @@ def __run_subprocess(
     str_input: str = None,
     timeout: float = None,
     check: bool = False,
-    **kwargs
+    **kwargs,
 ) -> subprocess.CompletedProcess:
     """Run a command as a subprocess.
 

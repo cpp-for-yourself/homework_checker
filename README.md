@@ -9,7 +9,7 @@ The idea behind the script is the following:
 
 It is expected that the submitted homework will follow the folder structure specified in the `homework.yml` file. 
 
-## Core funcionality ##
+## Core functionality ##
 
 ### Run different tests ###
 For now we support running tests for code written in different languages:

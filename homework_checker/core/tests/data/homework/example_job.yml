@@ -9,11 +9,12 @@ homeworks:
         folder: task_1        # Name of the folder containing the Task.
         output_type: string   # We expect a string as an output.
         binary_name: main
-        tests:                # An Task can have multiple tests.
+        compiler_flags: "-std=c++17"
+        tests:                # A Task can have multiple tests.
           - name: String output test
             expected_output: > # this wraps into a long string, no line breaks.
               This is a long test output that we expect to be produced by the
-              code. We will compare the ouput to this EXACTLY.
+              code. We will compare the output to this EXACTLY.
           - name: Input output test
             input_args: Some string
             expected_output: >
@@ -24,11 +25,13 @@ homeworks:
       - name: Build failure task  # This one should not build, no need for tests
         language: cpp
         folder: task_2
+        compiler_flags: "-std=c++17"
         output_type: string
       - name: CMake build arithmetics task
         language: cpp
         folder: task_3
         output_type: number
+        compiler_flags: "-std=c++17"
         binary_name: sum_numbers
         tests:
           - name: Test integer arithmetics
@@ -50,6 +53,18 @@ homeworks:
               test_me.sh
           - name: Test wrong output
             expected_output: Different output that doesn't match generated one
+      - name: Test input piping
+        language: cpp
+        folder: task_5
+        compiler_flags: "-std=c++17"
+        output_type: string
+        tests:
+          - name: Test input piping
+            input_pipe_args: echo hello world
+            expected_output: |
+              Input string:
+              Input another string:
+              hello_world
 
   - name: "Homework where things go wrong"
     folder: "homework_2"
@@ -59,6 +74,7 @@ homeworks:
         language: cpp
         folder: task_1
         build_type: simple
+        compiler_flags: "-std=c++17"
         output_type: number
         tests:
           # Should fail as the binary returns a string
@@ -67,6 +83,7 @@ homeworks:
       - name: While loop task
         language: cpp
         folder: task_2
+        compiler_flags: "-std=c++17"
         build_type: simple
         tests:
           - name: Test timeout  # Should fail because of the timeout.
@@ -76,6 +93,7 @@ homeworks:
         language: cpp
         folder: task_3
         build_type: simple
+        compiler_flags: "-std=c++17"
         output_type: number
         tests:
           - name: Test 1
@@ -86,6 +104,7 @@ homeworks:
     tasks:
       - name: Google Tests
         language: cpp
+        compiler_flags: "-std=c++17"
         folder: cpptests
         tests:
           - name: Just build
@@ -104,7 +123,6 @@ homeworks:
         language: bash
         folder: bashtests
         binary_name: ls_me
-        pipe_through: "| head -n 2"
         tests:
           - name: ls
             inject_folders: # Just multiple folders.
@@ -112,6 +130,7 @@ homeworks:
                 destination: fail
               - source: solutions/pass
                 destination: pass
+            output_pipe_args: "head -n 2"
             expected_output: |  # This maintains whitespaces.
               fail
               ls_me.sh
@@ -124,6 +143,7 @@ homeworks:
         folder: task_1
         build_type: simple
         output_type: number
+        compiler_flags: "-std=c++17"
         tests:
           - name: Irrelevant
             expected_output: 4

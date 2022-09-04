@@ -129,6 +129,30 @@ class TestTask(unittest.TestCase):
         self.assertTrue(results["Test integer arithmetics"].succeeded())
         self.assertFalse(results["Test float arithmetics"].succeeded())
 
+    def test_check_input_args_piping(self: "TestTask"):
+        """Check that we can pipe arguments into a binary."""
+
+        homework_name, task = self.__get_homework_name_and_task(
+            homework_index=0, task_index=4
+        )
+        self.assertEqual(homework_name, "Sample homework")
+        self.assertEqual(task.name, "Test input piping")
+        results = task.check()
+        results = TestTask.__sanitize_results(results)
+        expected_number_of_build_outputs = 1
+        expected_number_of_test_outputs = 1
+        expected_number_of_code_style_outputs = 0
+        self.assertEqual(
+            len(results),
+            expected_number_of_build_outputs
+            + expected_number_of_test_outputs
+            + expected_number_of_code_style_outputs,
+            "Wrong results: {}".format(results),
+        )
+        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
+        print(results["Test input piping"].stderr)
+        self.assertTrue(results["Test input piping"].succeeded())
+
     def test_check_bash_task(self: "TestTask"):
         """Check a simple cmake build on arithmetics example."""
 

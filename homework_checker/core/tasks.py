@@ -74,12 +74,11 @@ class Task:
         self._output_type = task_node[Tags.OUTPUT_TYPE_TAG]
         self._student_task_folder = student_task_folder
         self._binary_name = task_node[Tags.BINARY_NAME_TAG]
-        self._pipe_through = task_node[Tags.PIPE_TAG]
         self._build_timeout = task_node[Tags.BUILD_TIMEOUT_TAG]
+
+        self._test_nodes = []
         if Tags.TESTS_TAG in task_node:
             self._test_nodes = task_node[Tags.TESTS_TAG]
-        else:
-            self._test_nodes = []  # Sometimes we don't have tests.
         self.__test_counter = 0
 
     def __with_number_prefix(self: Task, test_name: str) -> str:
@@ -187,7 +186,7 @@ class CppTask(Task):
 
     CMAKE_BUILD_CMD = "cmake .. && make -j2"
     REMAKE_AND_TEST = "make clean && rm -r * && cmake .. && make -j2 && ctest -VV"
-    BUILD_CMD_SIMPLE = "clang++ -std=c++14 -o {binary} {compiler_flags} {binary}.cpp"
+    BUILD_CMD_SIMPLE = "clang++ {compiler_flags} -o {binary} {binary}.cpp"
 
     def __init__(self: CppTask, task_node: dict, root_folder: Path, job_file: Path):
         """Initialize the C++ Task."""
@@ -247,17 +246,28 @@ class CppTask(Task):
                 cwd=executable_folder,
                 timeout=test_node[Tags.TIMEOUT_TAG],
             )
+
+        output_pipe_args = None
+        if Tags.OUTPUT_PIPE_TAG in test_node:
+            output_pipe_args = test_node[Tags.OUTPUT_PIPE_TAG]
+        input_pipe_args = None
+        if Tags.INPUT_PIPE_TAG in test_node:
+            input_pipe_args = test_node[Tags.INPUT_PIPE_TAG]
+
         input_str = ""
-        if Tags.INPUT_TAG in test_node:
-            input_str = test_node[Tags.INPUT_TAG]
+        if Tags.INPUT_ARGS_TAG in test_node:
+            input_str = test_node[Tags.INPUT_ARGS_TAG]
         run_cmd = "./{binary_name} {args}".format(
             binary_name=self._binary_name, args=input_str
         )
-        if self._pipe_through:
-            run_cmd += " " + self._pipe_through
+        if input_pipe_args:
+            run_cmd = input_pipe_args + " | " + run_cmd
+        if output_pipe_args:
+            run_cmd += " | " + output_pipe_args
         run_result = tools.run_command(
             run_cmd, cwd=executable_folder, timeout=test_node[Tags.TIMEOUT_TAG]
         )
+
         if not run_result.succeeded():
             return run_result
         # TODO(igor): do I need explicit error here?
@@ -294,12 +304,21 @@ class BashTask(Task):
     def _run_test(
         self: BashTask, test_node: dict, executable_folder: Path
     ) -> tools.CmdResult:
+        output_pipe_args = None
+        if Tags.OUTPUT_PIPE_TAG in test_node:
+            output_pipe_args = test_node[Tags.OUTPUT_PIPE_TAG]
+        input_pipe_args = None
+        if Tags.INPUT_PIPE_TAG in test_node:
+            input_pipe_args = test_node[Tags.INPUT_PIPE_TAG]
+
         input_str = ""
-        if Tags.INPUT_TAG in test_node:
-            input_str = test_node[Tags.INPUT_TAG]
+        if Tags.INPUT_ARGS_TAG in test_node:
+            input_str = test_node[Tags.INPUT_ARGS_TAG]
         run_cmd = BashTask.RUN_CMD.format(binary_name=self._binary_name, args=input_str)
-        if self._pipe_through:
-            run_cmd += " " + self._pipe_through
+        if input_pipe_args:
+            run_cmd = input_pipe_args + " | " + run_cmd
+        if output_pipe_args:
+            run_cmd += " | " + output_pipe_args
         run_result = tools.run_command(
             run_cmd, cwd=executable_folder, timeout=test_node[Tags.TIMEOUT_TAG]
         )
