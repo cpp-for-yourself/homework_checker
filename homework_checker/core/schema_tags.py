@@ -23,6 +23,7 @@ class Tags:
     OUTPUT_PIPE_TAG = "output_pipe_args"
     OUTPUT_TYPE_TAG = "output_type"
     RUN_GTESTS_TAG = "run_google_tests"
+    STYLE_CHECKERS_TAG = "style_checkers"
     TASKS_TAG = "tasks"
     TESTS_TAG = "tests"
     TIMEOUT_TAG = "timeout"
