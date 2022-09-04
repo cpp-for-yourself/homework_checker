@@ -49,7 +49,9 @@ class SchemaManager:
             Optional(Tags.OUTPUT_TYPE_TAG, default=OutputTags.STRING): Or(
                 OutputTags.STRING, OutputTags.NUMBER
             ),
-            Optional(Tags.COMPILER_FLAGS_TAG, default="-std=c++17 -Wall -Wpedantic -Wextra"): str,
+            Optional(
+                Tags.COMPILER_FLAGS_TAG, default="-std=c++17 -Wall -Wpedantic -Wextra"
+            ): str,
             Optional(Tags.BINARY_NAME_TAG, default="main"): str,
             Optional(Tags.BUILD_TYPE_TAG, default=BuildTags.CMAKE): Or(
                 BuildTags.CMAKE, BuildTags.SIMPLE
