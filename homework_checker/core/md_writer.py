@@ -10,18 +10,21 @@ from .checker import HomeworkResultDict
 TABLE_TEMPLATE = "| {hw_name} | {task_name} | {test_name} | {result_sign} |\n"
 TABLE_SEPARATOR = "|---|---|---|:---:|\n"
 
+ENTRY_TEMPLATE = """
+**`{name}`**
+```{syntax}
+{content}
+```
+"""
+
+STATUS_CODE_TEMPLATE = """
+**`Status code: `** {code}
+"""
+
 ERROR_TEMPLATE = """
 <details><summary><b>{hw_name} | {task_name} | {test_name}</b></summary>
 
-**`stderr`**
-```apiblueprint
-{stderr}
-```
-
-**`stdout`**
-```
-{stdout}
-```
+{entries}
 
 --------
 
@@ -120,10 +123,30 @@ class MdWriter:
         if expired:
             self._errors += EXPIRED_TEMPLATE.format(hw_name=hw_name)
             return
+        entries = STATUS_CODE_TEMPLATE.format(code=test_result.status)
+        if test_result.output_mismatch:
+            if test_result.output_mismatch.input:
+                entries += ENTRY_TEMPLATE.format(
+                    name="Input",
+                    syntax="",
+                    content=test_result.output_mismatch.input,
+                )
+            entries += ENTRY_TEMPLATE.format(
+                name="Output mismatch",
+                syntax="diff",
+                content=test_result.output_mismatch.diff(),
+            )
+        if test_result.stderr:
+            entries += ENTRY_TEMPLATE.format(
+                name="stderr", syntax="css", content=test_result.stderr
+            )
+        if test_result.stdout:
+            entries += ENTRY_TEMPLATE.format(
+                name="stdout", syntax="", content=test_result.stdout
+            )
         self._errors += ERROR_TEMPLATE.format(
             hw_name=hw_name,
             task_name=task_name,
             test_name=test_name,
-            stderr=test_result.stderr,
-            stdout=test_result.stdout,
+            entries=entries,
         )

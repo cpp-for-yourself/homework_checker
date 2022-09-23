@@ -27,3 +27,6 @@ build/
 dist/
 /result.md
 /results.md
+
+.DS_Store
+.vscode/

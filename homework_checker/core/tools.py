@@ -13,6 +13,7 @@ import logging
 import datetime
 import signal
 import shutil
+import difflib
 import hashlib
 
 from .schema_tags import OutputTags
@@ -138,32 +139,77 @@ def parse_git_url(git_url: str) -> Tuple[Optional[str], Optional[str], Optional[
     return domain, user, project
 
 
+class OutputMismatch:
+    def __init__(self, input: str, expected_output: str, actual_output: str) -> None:
+        """Initialize the output mismatch class."""
+        self._input = input
+        self._expected_output = expected_output
+        self._actual_output = actual_output
+
+    @property
+    def input(self: OutputMismatch) -> str:
+        """Get input."""
+        return self._input
+
+    @property
+    def expected_output(self: OutputMismatch) -> str:
+        """Get expected output."""
+        return self._expected_output
+
+    @property
+    def actual_output(self: OutputMismatch) -> str:
+        """Get actual output."""
+        return self._actual_output
+
+    def diff(self: OutputMismatch) -> str:
+        actual = str(self._actual_output)
+        expected = str(self._expected_output)
+        diff = difflib.unified_diff(
+            actual.split("\n"),
+            expected.split("\n"),
+            fromfile="Actual output",
+            tofile="Expected output",
+        )
+        diff_str = ""
+        for line in diff:
+            diff_str += line + "\n"
+        return diff_str
+
+    def __repr__(self: OutputMismatch) -> str:
+        """Representation of the output mismatch object."""
+        return "input: {}, expected: {}, actual: {}".format(
+            self._input, self._expected_output, self._actual_output
+        )
+
+
 class CmdResult:
     """A small container for command result."""
 
     SUCCESS = 0
     FAILURE = 13
+    TIMEOUT = 42
 
     def __init__(
-        self: CmdResult, returncode: int = None, stdout: str = None, stderr: str = None
+        self: CmdResult,
+        status: int,
+        stdout: str = None,
+        stderr: str = None,
+        output_mismatch: OutputMismatch = None,
     ):
         """Initialize either stdout of stderr."""
-        self._returncode = returncode
+        self._status = status
         self._stdout = stdout
         self._stderr = stderr
+        self._output_mismatch = output_mismatch
 
     def succeeded(self: CmdResult) -> bool:
         """Check if the command succeeded."""
-        if self.returncode is not None:
-            return self.returncode == CmdResult.SUCCESS
-        if self.stderr:
-            return False
-        return True
+        return self._status == CmdResult.SUCCESS
 
     @property
-    def returncode(self: CmdResult) -> Optional[int]:
-        """Get returncode."""
-        return self._returncode
+    def status(self: CmdResult) -> int:
+        """Get status."""
+        return self._status
 
     @property
     def stdout(self: CmdResult) -> Optional[str]:
@@ -175,24 +221,26 @@ class CmdResult:
         """Get stderr."""
         return self._stderr
 
-    @stderr.setter
-    def stderr(self, value: str):
-        self._returncode = None  # We can't rely on returncode anymore
-        self._stderr = value
+    @property
+    def output_mismatch(self: CmdResult) -> Optional[OutputMismatch]:
+        """Get output_mismatch."""
+        return self._output_mismatch
 
     @staticmethod
     def success() -> CmdResult:
         """Return a cmd result that is a success."""
-        return CmdResult(stdout="Success!")
+        return CmdResult(status=CmdResult.SUCCESS)
 
     def __repr__(self: CmdResult) -> str:
-        """Representatin of command result."""
-        stdout = self.stdout
-        if not stdout:
-            stdout = ""
-        if self.stderr:
-            return "stdout: {}, stderr: {}".format(stdout.strip(), self.stderr.strip())
-        return stdout.strip()
+        """Representation of command result."""
+        repr = "status: {} ".format(self._status)
+        if self._stdout:
+            repr += "stdout: {} ".format(self._stdout)
+        if self._stderr:
+            repr += "stderr: {} ".format(self._stderr)
+        if self._output_mismatch:
+            repr += "output_mismatch: {}".format(self._output_mismatch)
+        return repr.strip()
 
 
 def run_command(
@@ -228,21 +276,21 @@ def run_command(
             timeout=timeout,
         )
         return CmdResult(
-            returncode=process.returncode,
+            status=process.returncode,
             stdout=process.stdout.decode("utf-8"),
             stderr=process.stderr.decode("utf-8"),
         )
     except subprocess.CalledProcessError as error:
         output_text = error.output.decode("utf-8")
-        log.error("command '%s' finished with code: %s", error.cmd, error.returncode)
+        log.error("command '%s' finished with code: %s", error.cmd, error.status)
         log.debug("command output: \n%s", output_text)
-        return CmdResult(returncode=error.returncode, stderr=output_text)
+        return CmdResult(status=error.status, stderr=output_text)
     except subprocess.TimeoutExpired as error:
         output_text = "Timeout: command '{}' ran longer than {} seconds".format(
             error.cmd.strip(), error.timeout
         )
         log.error(output_text)
-        return CmdResult(returncode=1, stderr=output_text)
+        return CmdResult(status=CmdResult.TIMEOUT, stderr=output_text)
 
 
 def __run_subprocess(
@@ -281,11 +329,11 @@ def __run_subprocess(
             raise TimeoutExpired(
                 process.args, timeout, output=stdout, stderr=stderr
             ) from timeout_error
-        retcode = process.poll()
-        if retcode is None:
-            retcode = 1
-        if check and retcode:
+        return_code = process.poll()
+        if return_code is None:
+            return_code = 1
+        if check and return_code:
             raise CalledProcessError(
-                retcode, process.args, output=stdout, stderr=stderr
+                return_code, process.args, output=stdout, stderr=stderr
             )
-    return CompletedProcess(process.args, retcode, stdout, stderr)
+    return CompletedProcess(process.args, return_code, stdout, stderr)

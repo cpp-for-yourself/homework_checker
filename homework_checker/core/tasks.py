@@ -13,11 +13,6 @@ from .schema_tags import Tags, LangTags, BuildTags
 
 log = logging.getLogger("GHC")
 
-
-OUTPUT_MISMATCH_MESSAGE = """Given input: '{input}'
-Your output '{actual}'
-Expected output: '{expected}'"""
-
 BUILD_SUCCESS_TAG = "Build succeeded"
 STYLE_ERROR_TAG = "Style errors"
 
@@ -289,14 +284,24 @@ class CppTask(Task):
         our_output, error = tools.convert_to(self._output_type, run_result.stdout)
         if not our_output:
             # Conversion has failed.
-            run_result.stderr = error
-            return run_result
+            return tools.CmdResult(
+                status=tools.CmdResult.FAILURE,
+                stdout=run_result.stdout,
+                stderr=error,
+            )
         expected_output, error = tools.convert_to(
             self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG]
         )
         if our_output != expected_output:
-            run_result.stderr = OUTPUT_MISMATCH_MESSAGE.format(
-                actual=our_output, input=input_str, expected=expected_output
+            return tools.CmdResult(
+                status=tools.CmdResult.FAILURE,
+                stdout=run_result.stdout,
+                stderr=run_result.stderr,
+                output_mismatch=tools.OutputMismatch(
+                    input=input_str,
+                    expected_output=expected_output,
+                    actual_output=our_output,
+                ),
             )
         return run_result
 
@@ -342,13 +347,23 @@ class BashTask(Task):
         our_output, error = tools.convert_to(self._output_type, run_result.stdout)
         if not our_output:
             # Conversion has failed.
-            run_result.stderr = error
-            return run_result
+            return tools.CmdResult(
+                status=tools.CmdResult.FAILURE,
+                stdout=run_result.stdout,
+                stderr=error,
+            )
         expected_output, error = tools.convert_to(
             self._output_type, test_node[Tags.EXPECTED_OUTPUT_TAG]
         )
         if our_output != expected_output:
-            run_result.stderr = OUTPUT_MISMATCH_MESSAGE.format(
-                actual=our_output, input=input_str, expected=expected_output
+            return tools.CmdResult(
+                status=tools.CmdResult.FAILURE,
+                stdout=run_result.stdout,
+                stderr=run_result.stderr,
+                output_mismatch=tools.OutputMismatch(
+                    input=input_str,
+                    expected_output=expected_output,
+                    actual_output=our_output,
+                ),
             )
         return run_result
