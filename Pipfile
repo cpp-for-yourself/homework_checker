@@ -9,5 +9,6 @@ schema = "*"
 cpplint = "*"
 datetime = "*"
 black = "*"
+typing-extensions = "*"
 
 [dev-packages]
