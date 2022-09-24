@@ -52,7 +52,11 @@ homeworks:
               Another line
               test_me.sh
           - name: Test wrong output
-            expected_output: Different output that doesn't match generated one
+            expected_output: |
+              Hello World!
+              Expected non-matching line
+
+              test_me.sh
       - name: Test input piping
         language: cpp
         folder: task_5
