@@ -18,7 +18,7 @@ ENTRY_TEMPLATE = """
 """
 
 STATUS_CODE_TEMPLATE = """
-**`Status code: `** {code}
+**`Status code`** {code}
 """
 
 ERROR_TEMPLATE = """
