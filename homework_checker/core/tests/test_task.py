@@ -5,11 +5,7 @@ import unittest
 from pathlib import Path
 from typing import Tuple
 
-from homework_checker.core.tasks import (
-    Task,
-    BUILD_SUCCESS_TAG,
-    STYLE_ERROR_TAG,
-)
+from homework_checker.core.tasks import Task
 from homework_checker.core.schema_tags import Tags
 from homework_checker.core.schema_manager import SchemaManager
 from homework_checker.core import tools
@@ -73,18 +69,16 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.name, "Simple cpp tasks")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 3
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs + expected_number_of_test_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
-        self.assertEqual(results["String output test"].stderr, "")
-        self.assertTrue(results["String output test"].succeeded())
-        self.assertTrue(results["Input output test"].succeeded())
-        self.assertFalse(results["Wrong output fail"].succeeded())
+        self.assertEqual(results["Configure CMake"].stderr, "")
+        self.assertTrue(results["Configure CMake"].succeeded())
+        self.assertTrue(results["Build binary"].succeeded())
+        self.assertTrue(results["String output is as expected"].succeeded())
 
     def test_check_build_failure_task(self: "TestTask"):
         """Check that the task fails if code does not build."""
@@ -96,14 +90,13 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.name, "Build failure task")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 1
-        expected_number_of_test_outputs = 0
+        expected_number_of_test_outputs = 2
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs + expected_number_of_test_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertFalse(results[BUILD_SUCCESS_TAG].succeeded())
+        self.assertFalse(results["Build"].succeeded())
 
     def test_check_cmake_arithmetics_task(self: "TestTask"):
         """Check a simple cmake build on arithmetics example."""
@@ -115,17 +108,12 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.name, "CMake build arithmetics task")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 1
-        expected_number_of_test_outputs = 2
-        expected_number_of_code_style_outputs = 0
+        expected_number_of_test_outputs = 4
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs
-            + expected_number_of_test_outputs
-            + expected_number_of_code_style_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
         self.assertTrue(results["Test integer arithmetics"].succeeded())
         self.assertFalse(results["Test float arithmetics"].succeeded())
 
@@ -139,18 +127,12 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.name, "Test input piping")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 1
-        expected_number_of_test_outputs = 1
-        expected_number_of_code_style_outputs = 0
+        expected_number_of_test_outputs = 3
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs
-            + expected_number_of_test_outputs
-            + expected_number_of_code_style_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
-        print(results["Test input piping"].stderr)
         self.assertTrue(results["Test input piping"].succeeded())
 
     def test_check_bash_task(self: "TestTask"):
@@ -173,7 +155,6 @@ class TestTask(unittest.TestCase):
             + expected_number_of_code_style_outputs,
             "Wrong results: {}".format(results),
         )
-        print(results)
         self.assertTrue(results["Test output"].succeeded())
         self.assertFalse(results["Test wrong output"].succeeded())
 
@@ -197,11 +178,10 @@ class TestTask(unittest.TestCase):
             + expected_number_of_code_style_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
         self.assertFalse(results["Wrong output format"].succeeded())
         self.assertEqual(
             results["Wrong output format"].stderr,
-            "could not convert string to float: 'hello world\\n'",
+            "could not convert string to float: 'hello world'",
         )
 
     def test_timing_out_task(self: "TestTask"):
@@ -224,7 +204,6 @@ class TestTask(unittest.TestCase):
             + expected_number_of_code_style_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
         self.assertFalse(results["Test timeout"].succeeded())
         if not results["Test timeout"].stderr:
             self.fail()
@@ -240,42 +219,51 @@ class TestTask(unittest.TestCase):
             homework_index=2, task_index=0
         )
         self.assertEqual(homework_name, "Homework with injections")
-        self.assertEqual(task.name, "Google Tests")
+        self.assertEqual(task.name, "Default Google Tests")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 1
         expected_number_of_test_outputs = 3
-        expected_number_of_code_style_outputs = 0
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs
-            + expected_number_of_test_outputs
-            + expected_number_of_code_style_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
-        self.assertTrue(results[BUILD_SUCCESS_TAG].succeeded())
-        self.assertTrue(results["Just build"].succeeded())
-        self.assertTrue(results["Inject pass"].succeeded())
-        self.assertFalse(results["Inject fail"].succeeded())
+        self.assertTrue(results["Configure CMake"].succeeded())
+        self.assertTrue(results["Build"].succeeded())
+        self.assertTrue(results["Test"].succeeded())
 
-    def test_bash_task_with_injections(self: "TestTask"):
-        """Check that we can inject folders into bash tasks too."""
+    def test_inject_google_tests_task(self: "TestTask"):
+        """Check that we can run injected google test."""
 
         homework_name, task = self.__get_homework_name_and_task(
             homework_index=2, task_index=1
         )
         self.assertEqual(homework_name, "Homework with injections")
+        self.assertEqual(task.name, "Injected Google Tests")
+        results = task.check()
+        results = TestTask.__sanitize_results(results)
+        expected_number_of_test_outputs = 4
+        self.assertEqual(
+            len(results),
+            expected_number_of_test_outputs,
+            "Wrong results: {}".format(results),
+        )
+        self.assertTrue(results["Test"].succeeded())
+
+    def test_bash_task_with_injections(self: "TestTask"):
+        """Check that we can inject folders into bash tasks too."""
+
+        homework_name, task = self.__get_homework_name_and_task(
+            homework_index=2, task_index=2
+        )
+        self.assertEqual(homework_name, "Homework with injections")
         self.assertEqual(task.name, "Bash with many folders")
         results = task.check()
         results = TestTask.__sanitize_results(results)
-        expected_number_of_build_outputs = 0
-        expected_number_of_test_outputs = 1
-        expected_number_of_code_style_outputs = 0
+        expected_number_of_test_outputs = 2
         self.assertEqual(
             len(results),
-            expected_number_of_build_outputs
-            + expected_number_of_test_outputs
-            + expected_number_of_code_style_outputs,
+            expected_number_of_test_outputs,
             "Wrong results: {}".format(results),
         )
         self.assertTrue(results["ls"].succeeded())
