@@ -5,11 +5,7 @@ import unittest
 from pathlib import Path
 from typing import Tuple
 
-from homework_checker.core.tasks import (
-    Task,
-    BUILD_SUCCESS_TAG,
-    STYLE_ERROR_TAG,
-)
+from homework_checker.core.tasks import Task
 from homework_checker.core.schema_tags import Tags
 from homework_checker.core.schema_manager import SchemaManager
 from homework_checker.core import tools

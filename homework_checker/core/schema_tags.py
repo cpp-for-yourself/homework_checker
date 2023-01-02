@@ -5,23 +5,14 @@ from typing import Any
 class Tags:
     """List of tags available."""
 
-    BINARY_NAME_TAG = "binary_name"
-    BUILD_TIMEOUT_TAG = "build_timeout"
-    BUILD_TYPE_TAG = "build_type"
     CMD_TAG = "cmd"
-    COMPILER_FLAGS_TAG = "compiler_flags"
     DEADLINE_TAG = "submit_by"
     EXPECTED_OUTPUT_TAG = "expected_output"
     FOLDER_TAG = "folder"
     HOMEWORKS_TAG = "homeworks"
-    INPUT_ARGS_TAG = "input_args"
-    INPUT_PIPE_TAG = "input_pipe_args"
-    LANGUAGE_TAG = "language"
     NAME_TAG = "name"
     OUTPUT_PIPE_TAG = "output_pipe_args"
     OUTPUT_TYPE_TAG = "output_type"
-    RUN_GTESTS_TAG = "run_google_tests"
-    STYLE_CHECKERS_TAG = "style_checkers"
     TASKS_TAG = "tasks"
     TESTS_TAG = "tests"
     TIMEOUT_TAG = "timeout"
@@ -33,22 +24,6 @@ class OutputTags:
     STRING = "string"
     NUMBER = "number"
     ALL = [STRING, NUMBER]
-
-
-class BuildTags:
-    """Define tags for build types."""
-
-    CMAKE = "cmake"
-    SIMPLE = "simple"
-    ALL = [CMAKE, SIMPLE]
-
-
-class LangTags:
-    """Define tags for build types."""
-
-    CPP = "cpp"
-    BASH = "bash"
-    ALL = [CPP, BASH]
 
 
 class OneOf:

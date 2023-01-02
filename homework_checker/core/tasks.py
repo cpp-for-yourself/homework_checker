@@ -9,15 +9,10 @@ from typing import Optional, Dict, List, Tuple
 from shutil import copytree, rmtree
 
 from . import tools
-from .schema_tags import Tags, LangTags, BuildTags
+from .schema_tags import Tags
 
 
 log = logging.getLogger("GHC")
-
-BUILD_SUCCESS_TAG = "Build succeeded"
-STYLE_ERROR_TAG = "Style errors"
-
-TOTAL_ERRORS_FOUND_TAG = "Total errors found"
 
 
 class Task:
@@ -36,13 +31,7 @@ class Task:
         if not student_task_folder.exists():
             log.warning("Folder '%s' does not exist. Skipping.", student_task_folder)
             return None
-        language_tag = task_node[Tags.LANGUAGE_TAG]
-        if language_tag == LangTags.CPP:
-            return CppTask(task_node, student_task_folder, job_file)
-        if language_tag == LangTags.BASH:
-            return BashTask(task_node, student_task_folder, job_file)
-        log.error("Unknown Task language.")
-        return None
+        return Task(task_node, student_task_folder, job_file)
 
     def __init__(
         self: Task, task_node: dict, student_task_folder: Path, job_file: Path
@@ -51,7 +40,6 @@ class Task:
         self.name = task_node[Tags.NAME_TAG]
         self._job_root_folder = job_file.parent
         self._student_task_folder = student_task_folder
-        self._build_timeout = task_node[Tags.BUILD_TIMEOUT_TAG]
 
         self._test_nodes = task_node[Tags.TESTS_TAG]
         self.__test_counter = 0
@@ -123,21 +111,3 @@ class Task:
                     ),
                 )
         return run_result
-
-
-class CppTask(Task):
-    """Define a C++ Task."""
-
-    def __init__(self: CppTask, task_node: dict, root_folder: Path, job_file: Path):
-        """Initialize the C++ Task."""
-        super().__init__(task_node, root_folder, job_file)
-
-
-class BashTask(Task):
-    """Define a Bash Task."""
-
-    RUN_CMD = "sh {binary_name}.sh {args}"
-
-    def __init__(self: BashTask, task_node: dict, root_folder: Path, job_file: Path):
-        """Initialize the Task."""
-        super().__init__(task_node, root_folder, job_file)

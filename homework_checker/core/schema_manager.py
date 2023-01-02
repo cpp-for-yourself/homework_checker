@@ -10,7 +10,7 @@ from ruamel.yaml.comments import CommentedMap, CommentedSeq  # type: ignore[impo
 from schema import Schema, SchemaError, Or, Optional  # type: ignore[import]
 
 from .tools import MAX_DATE_STR
-from .schema_tags import Tags, OutputTags, BuildTags, LangTags
+from .schema_tags import Tags, OutputTags
 
 log = logging.getLogger("GHC")
 
@@ -36,9 +36,7 @@ class SchemaManager:
 
         task_schema = {
             Tags.NAME_TAG: str,
-            Tags.LANGUAGE_TAG: Or(LangTags.CPP, LangTags.BASH),
             Tags.FOLDER_TAG: str,
-            Optional(Tags.BUILD_TIMEOUT_TAG, default=60): float,
             Tags.TESTS_TAG: [test_schema],
         }
 

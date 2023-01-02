@@ -5,11 +5,10 @@ homeworks:
     folder: "homework_1"
     tasks:
       - name: Simple cpp tasks          # This is a struct for Task 1.
-        language: cpp         # Type of the Task.
         folder: task_1        # Name of the folder containing the Task.
         tests:                # A Task can have multiple tests.
           - name: Configure CMake
-            cmd: cmake -S . -B build
+            cmd: cmake -D CMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic" -S . -B build
           - name: Build binary
             cmd: cmake --build build
           - name: String output is as expected
@@ -19,7 +18,6 @@ homeworks:
               This is a long test output that we expect to be produced by the
               code. We will compare the output to this EXACTLY.
       - name: Build failure task
-        language: cpp
         folder: task_2
         tests:                # A Task can have multiple tests.
           - name: Configure CMake
@@ -32,7 +30,6 @@ homeworks:
             expected_output: >
               This output is irrelevant
       - name: CMake build arithmetics task
-        language: cpp
         folder: task_3
         tests:
           - name: Configure CMake
@@ -48,7 +45,6 @@ homeworks:
             output_type: number
             expected_output: 7.15
       - name: Bash task
-        language: bash
         folder: task_4
         tests:
           - name: Test output
@@ -65,7 +61,6 @@ homeworks:
 
               test_me.sh
       - name: Test input piping
-        language: cpp
         folder: task_5
         tests:
           - name: Configure CMake
@@ -84,7 +79,6 @@ homeworks:
     submit_by: "2018-04-18 00:00:00"
     tasks:
       - name: Return number task
-        language: cpp
         folder: task_1
         tests:
           - name: Build
@@ -95,7 +89,6 @@ homeworks:
             output_type: number
             expected_output: 4
       - name: While loop task
-        language: cpp
         folder: task_2
         tests:
           - name: Build
@@ -105,7 +98,6 @@ homeworks:
             timeout: 2.0
             expected_output: "irrelevant"
       - name: Non existing task
-        language: cpp
         folder: task_3
         tests:
           - name: Build
@@ -115,7 +107,6 @@ homeworks:
     folder: "homework_3"
     tasks:
       - name: Default Google Tests
-        language: cpp
         folder: cpptests
         tests:
           - name: Configure CMake
@@ -125,7 +116,6 @@ homeworks:
           - name: Test
             cmd: ctest --test-dir build --output-on-failure
       - name: Injected Google Tests
-        language: cpp
         folder: cpptests
         tests:
           - name: Inject testing folders
@@ -137,7 +127,6 @@ homeworks:
           - name: Test
             cmd: ctest --test-dir build --output-on-failure
       - name: Bash with many folders
-        language: bash
         folder: bashtests
         tests:
           - name: Inject testing folders
@@ -152,7 +141,6 @@ homeworks:
     folder: "homework_4"
     tasks:
       - name: Irrelevant
-        language: cpp
         folder: task_1
         tests:
           - name: Irrelevant

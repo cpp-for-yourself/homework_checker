@@ -7,7 +7,6 @@ homeworks:
     tasks:
       - folder: String value
         name: String value
-        language: Any of ['cpp', 'bash']
         ~[optional]~ binary_name: String value
         tests:
           - name: String value
