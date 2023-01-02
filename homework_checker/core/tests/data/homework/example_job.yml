@@ -7,51 +7,58 @@ homeworks:
       - name: Simple cpp tasks          # This is a struct for Task 1.
         language: cpp         # Type of the Task.
         folder: task_1        # Name of the folder containing the Task.
-        output_type: string   # We expect a string as an output.
-        binary_name: main
-        compiler_flags: "-std=c++17"
         tests:                # A Task can have multiple tests.
-          - name: String output test
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build binary
+            cmd: cmake --build build
+          - name: String output is as expected
+            cmd: ./build/main
+            output_type: string   # We expect a string as an output.
             expected_output: > # this wraps into a long string, no line breaks.
               This is a long test output that we expect to be produced by the
               code. We will compare the output to this EXACTLY.
-          - name: Input output test
-            input_args: Some string
-            expected_output: >
-              Some string output
-          - name: Wrong output fail
-            expected_output: >
-              Unexpected output.
-      - name: Build failure task  # This one should not build, no need for tests
+      - name: Build failure task
         language: cpp
         folder: task_2
-        compiler_flags: "-std=c++17"
-        output_type: string
+        tests:                # A Task can have multiple tests.
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build
+            cmd: cmake --build build
+          - name: Should not be called
+            cmd: ./build/main
+            output_type: string   # We expect a string as an output.
+            expected_output: >
+              This output is irrelevant
       - name: CMake build arithmetics task
         language: cpp
         folder: task_3
-        output_type: number
-        compiler_flags: "-std=c++17"
-        binary_name: sum_numbers
         tests:
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build binary
+            cmd: cmake --build build
           - name: Test integer arithmetics
-            input_args: 2 2
+            cmd: ./build/sum_numbers 2 2
+            output_type: number
             expected_output: 4
-          # This test should fail as we have only implemented int arithmetics.
-          - name: Test float arithmetics
-            input_args: 2.15 5
+          - name: Test float arithmetics  # This test fails because of implementation
+            cmd: ./build/sum_numbers 2.15 5
+            output_type: number
             expected_output: 7.15
       - name: Bash task
         language: bash
         folder: task_4
-        binary_name: test_me
         tests:
           - name: Test output
+            cmd: bash test_me.sh
             expected_output: |  # This maintains whitespaces.
               Hello World!
               Another line
               test_me.sh
           - name: Test wrong output
+            cmd: bash test_me.sh
             expected_output: |
               Hello World!
               Expected non-matching line
@@ -60,11 +67,13 @@ homeworks:
       - name: Test input piping
         language: cpp
         folder: task_5
-        compiler_flags: "-std=c++17"
-        output_type: string
         tests:
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build binary
+            cmd: cmake --build build
           - name: Test input piping
-            input_pipe_args: echo hello world
+            cmd: echo hello world | ./build/main
             expected_output: |
               Input string:
               Input another string:
@@ -77,67 +86,67 @@ homeworks:
       - name: Return number task
         language: cpp
         folder: task_1
-        build_type: simple
-        compiler_flags: "-std=c++17"
-        output_type: number
         tests:
+          - name: Build
+            cmd: c++ -std=c++17 main.cpp -o main
           # Should fail as the binary returns a string
           - name: Wrong output format
+            cmd: ./main
+            output_type: number
             expected_output: 4
       - name: While loop task
         language: cpp
         folder: task_2
-        compiler_flags: "-std=c++17"
-        build_type: simple
         tests:
+          - name: Build
+            cmd: c++ -std=c++17 main.cpp -o main
           - name: Test timeout  # Should fail because of the timeout.
+            cmd: ./main
             timeout: 2.0
             expected_output: "irrelevant"
-      - name: Non existing task  # Non existing Task
+      - name: Non existing task
         language: cpp
         folder: task_3
-        build_type: simple
-        compiler_flags: "-std=c++17"
-        output_type: number
         tests:
-          - name: Test 1
-            expected_output: 4
+          - name: Build
+            cmd: c++ -std=c++17 main.cpp -o main
 
   - name: "Homework with injections"
     folder: "homework_3"
     tasks:
-      - name: Google Tests
+      - name: Default Google Tests
         language: cpp
-        compiler_flags: "-std=c++17"
         folder: cpptests
         tests:
-          - name: Just build
-            run_google_tests: True
-          - name: Inject pass
-            run_google_tests: True
-            inject_folders:
-              - source: solutions/pass/tests  # Relative to job folder
-                destination: tests  # Relative to the code source folder
-          - name: Inject fail
-            run_google_tests: True
-            inject_folders:
-              - source: solutions/fail/tests
-                destination: tests
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build
+            cmd: cmake --build build
+          - name: Test
+            cmd: ctest --test-dir build --output-on-failure
+      - name: Injected Google Tests
+        language: cpp
+        folder: cpptests
+        tests:
+          - name: Inject testing folders
+            cmd: cp -r ${JOB_ROOT}/solutions/pass/tests tests
+          - name: Configure CMake
+            cmd: cmake -S . -B build
+          - name: Build
+            cmd: cmake --build build
+          - name: Test
+            cmd: ctest --test-dir build --output-on-failure
       - name: Bash with many folders
         language: bash
         folder: bashtests
-        binary_name: ls_me
         tests:
+          - name: Inject testing folders
+            cmd: cp -r ${JOB_ROOT}/solutions/pass tests
           - name: ls
-            inject_folders: # Just multiple folders.
-              - source: solutions/fail
-                destination: fail
-              - source: solutions/pass
-                destination: pass
-            output_pipe_args: "head -n 2"
-            expected_output: |  # This maintains whitespaces.
-              fail
+            cmd: bash ls_me.sh | head -n 2
+            expected_output: |
               ls_me.sh
+              tests
 
   - name: "Non existing homework"  # Non existing homework
     folder: "homework_4"
@@ -145,9 +154,8 @@ homeworks:
       - name: Irrelevant
         language: cpp
         folder: task_1
-        build_type: simple
-        output_type: number
-        compiler_flags: "-std=c++17"
         tests:
           - name: Irrelevant
+            output_type: number
             expected_output: 4
+            cmd: ./irrelevant

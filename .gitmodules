@@ -1,0 +1,3 @@
+[submodule "homework_checker/core/tests/data/homework/homework_3/cpptests/external/googletest"]
+	path = homework_checker/core/tests/data/homework/homework_3/cpptests/external/googletest
+	url = https://github.com/google/googletest.git

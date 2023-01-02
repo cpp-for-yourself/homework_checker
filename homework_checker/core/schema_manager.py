@@ -26,43 +26,20 @@ class SchemaManager:
     def __init__(self: SchemaManager, file_name: Path):
         """Create a schema for my tests."""
 
-        injection_schema = {
-            Tags.INJECT_SOURCE_TAG: str,
-            Tags.INJECT_DESTINATION_TAG: str,
-        }
-
         test_schema = {
             Tags.NAME_TAG: str,
-            Optional(Tags.INPUT_ARGS_TAG): str,
-            Optional(Tags.INJECT_FOLDER_TAG): [injection_schema],
-            Optional(Tags.RUN_GTESTS_TAG, default=False): bool,
+            Tags.CMD_TAG: str,
             Optional(Tags.EXPECTED_OUTPUT_TAG): Or(str, float, int),
-            Optional(Tags.INPUT_PIPE_TAG, default=""): str,
-            Optional(Tags.OUTPUT_PIPE_TAG, default=""): str,
+            Optional(Tags.OUTPUT_TYPE_TAG): Or(OutputTags.STRING, OutputTags.NUMBER),
             Optional(Tags.TIMEOUT_TAG, default=60): float,
-        }
-
-        style_check_schema = {
-            Tags.NAME_TAG: str,
         }
 
         task_schema = {
             Tags.NAME_TAG: str,
             Tags.LANGUAGE_TAG: Or(LangTags.CPP, LangTags.BASH),
             Tags.FOLDER_TAG: str,
-            Optional(Tags.OUTPUT_TYPE_TAG, default=OutputTags.STRING): Or(
-                OutputTags.STRING, OutputTags.NUMBER
-            ),
-            Optional(
-                Tags.COMPILER_FLAGS_TAG, default="-std=c++17 -Wall -Wpedantic -Wextra"
-            ): str,
-            Optional(Tags.BINARY_NAME_TAG, default="main"): str,
-            Optional(Tags.BUILD_TYPE_TAG, default=BuildTags.CMAKE): Or(
-                BuildTags.CMAKE, BuildTags.SIMPLE
-            ),
             Optional(Tags.BUILD_TIMEOUT_TAG, default=60): float,
-            Optional(Tags.STYLE_CHECKERS_TAG): [style_check_schema],
-            Optional(Tags.TESTS_TAG): [test_schema],
+            Tags.TESTS_TAG: [test_schema],
         }
 
         homework_schema = {
